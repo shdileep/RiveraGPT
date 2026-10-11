@@ -8,28 +8,21 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 try:
-    from app import app
-    from starlette.types import ASGIApp, Scope, Receive, Send
+    from app import app as fastapi_app
 
-    class VercelPathRewriteMiddleware:
-        def __init__(self, app: ASGIApp):
-            self.app = app
-
-        async def __call__(self, scope: Scope, receive: Receive, send: Send):
-            if scope.get("type") == "http":
-                raw_path = scope.get("path", "/")
-                # Strip Vercel rewrite prefix so /api/index.py maps to /
-                for prefix in ["/api/index.py", "/api"]:
-                    if raw_path == prefix:
-                        raw_path = "/"
-                        break
-                    elif raw_path.startswith(prefix + "/"):
-                        raw_path = raw_path[len(prefix):]
-                        break
-                scope["path"] = raw_path or "/"
-            await self.app(scope, receive, send)
-
-    app.add_middleware(VercelPathRewriteMiddleware)
+    async def app(scope, receive, send):
+        if scope.get("type") == "http":
+            raw_path = scope.get("path", "/")
+            for prefix in ["/api/index.py", "/api"]:
+                if raw_path == prefix:
+                    raw_path = "/"
+                    break
+                elif raw_path.startswith(prefix + "/"):
+                    raw_path = raw_path[len(prefix):]
+                    break
+            scope["path"] = raw_path or "/"
+            scope["raw_path"] = (raw_path or "/").encode("ascii")
+        await fastapi_app(scope, receive, send)
 
 except Exception as e:
     from fastapi import FastAPI

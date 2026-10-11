@@ -62,6 +62,7 @@ except Exception:
 
 
 @app.get("/chat.png")
+@app.get("/api/index.py/chat.png")
 async def get_chat_icon():
     icon_path = BASE_DIR / "chat.png"
     if icon_path.exists():
@@ -70,6 +71,7 @@ async def get_chat_icon():
 
 
 @app.get("/")
+@app.get("/api/index.py")
 async def home(request: Request):
     return templates.TemplateResponse(
         request=request,
