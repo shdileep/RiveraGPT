@@ -1,55 +1,113 @@
-# MehadiAI
+# RiveraGPT
 
-MehadiAI is an intelligent AI assistant application built with FastAPI, LangChain, LangGraph, and Google Gemini. It supports conversational chat, document upload, retrieval-augmented generation (RAG), memory, web search, and calculator tools. The project is designed to be easy to run locally and simple to deploy on Render.
+RiveraGPT is an AI assistant platform and multi-model router built with FastAPI, LangChain, LangGraph, and Google Gemini, featuring active security guardrails, document RAG, persistent conversations, long-term memory, and tool integration.
 
-## Features
+![RiveraGPT UI](chat.png)
 
-- Chat with an AI assistant powered by Gemini models
-- Upload documents such as PDF, DOCX, TXT, MD, PY, and CSV files
-- Ask questions about uploaded files using RAG-based document search
-- Maintain conversation history and thread-based chat sessions
-- Use built-in tools for:
-  - calculator
-  - web search
-  - memory saving and recall
-  - uploaded document search
-- FastAPI backend with streaming chat responses
+## Overview
 
-## Live Demo
+RiveraGPT operates as an intelligent interface with capability-aware routing and system protection:
+- **Capability-Aware Router**: Dynamically matches user intents (Speed, Deep Reasoning, Code Generation, Indic Languages) with fallback reliability across configured providers.
+- **System-Level Security Rails**: Protects against direct and indirect prompt extraction, sanitizes output tokens to prevent credential leaks, and scrubs personally identifiable information (PII).
+- **Document RAG (Retrieval-Augmented Generation)**: Upload and query documents (PDF, DOCX, TXT, MD, PY, CSV) embedded using Google Generative AI and ChromaDB vector store.
+- **Conversational Memory**: SQLite-backed thread management supporting pin, rename, delete, and persistent long-term memory search.
+- **Built-in Assistant Tools**: Includes math evaluation, web search (Tavily), uploaded document retrieval, and memory recall.
 
-- Render Deployment: https://mehadiai.onrender.com
+## User-Facing Modes
 
-## Tech Stack
-
-- Backend: FastAPI, Uvicorn
-- AI Frameworks: LangChain, LangGraph
-- LLM: Google Gemini
-- Vector Database: Chroma
-- Database: SQLite with SQLAlchemy
-- Document Processing: PyPDF, docx2txt
-- Templating: Jinja2
+RiveraGPT exposes unified abstract operating modes:
+- **⚡ RiveraGPT Auto**: Automatic capability-aware intent routing.
+- **⚡ RiveraGPT Fast**: Optimized for low latency and quick turnaround.
+- **🧠 RiveraGPT Reasoner**: In-depth analytical reasoning and step-by-step logic.
+- **💻 RiveraGPT Code**: Specialized code authoring, syntax checking, and debugging.
+- **🇮🇳 RiveraGPT Indic**: Multilingual processing across Indian scripts and languages.
 
 ## Project Structure
 
 ```text
-MehadiAI/
-├── app.py                 # FastAPI application and routes
-├── agent.py               # LangGraph agent setup and Gemini model integration
-├── database.py            # SQLite database models and helpers
-├── rag.py                 # Document loading and RAG logic
-├── tools.py               # AI tools such as calculator, memory, and search
-├── requirements.txt       # Python dependencies
-├── README.md              # Project documentation
-├── templates/             # HTML templates for the frontend
+RiveraGPT/
+├── app.py                 # FastAPI application routes and streaming SSE
+├── agent.py               # LangGraph agent definitions and confidentiality prompt
+├── model_registry.py      # Multi-model catalog and health tracker
+├── model_router.py        # Intent detection and capability-aware fallback execution
+├── database.py            # SQLite database models, conversation CRUD & memory
+├── rag.py                 # Document parsing, chunking, and ChromaDB retrieval
+├── tools.py               # Assistant tools (calculator, web search, memory, RAG)
+├── security/              # Security and guardrails engine
+│   ├── guardrails.py      # Input/output security pipeline
+│   ├── injection.py       # Prompt extraction & injection defense
+│   ├── llama_guard.py     # Content safety classification
+│   ├── pii.py             # PII redaction (email, phone, SSN, card)
+│   └── secrets.py         # Secret and credential masking
+├── templates/             # Modern web interface
 │   └── index.html
-├── uploads/               # Uploaded documents are stored here
-├── data/                  # SQLite databases and checkpoints
-├── chroma_db/             # Chroma vector database storage
-└── test.py                # Basic test file
+├── tests/                 # Automated test suite
+│   ├── test_api.py        # Endpoint tests
+│   ├── test_database.py   # Database lifecycle tests
+│   ├── test_guardrails.py # Guardrails and scrubbing tests
+│   └── test_router.py     # Intent classification and routing tests
+├── requirements.txt       # Project dependencies
+└── README.md              # Project documentation
 ```
 
+## Prerequisites
 
+- Python 3.11+
+- Google Gemini API key (`GOOGLE_API_KEY`)
+- Tavily API key (`TAVILY_API_KEY`) for live web search (optional)
+
+## Environment Configuration
+
+Create a `.env` file in the project root:
+
+```env
+GOOGLE_API_KEY=your_google_gemini_api_key
+TAVILY_API_KEY=your_tavily_api_key
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+## Getting Started Locally
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/shdileep/RiveraGPT.git
+cd RiveraGPT
+```
+
+### 2. Set up virtual environment
+
+```bash
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Run automated tests
+
+```bash
+python -m pytest tests -v
+```
+
+### 5. Launch the application
+
+```bash
+python app.py
+```
+
+The web interface will be accessible at:
+```text
+http://127.0.0.1:8080
+```
 
 ## License
 
-This project is available for personal and educational use. Please check the repository license before commercial use.
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
