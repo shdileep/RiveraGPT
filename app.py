@@ -42,9 +42,15 @@ Path("data").mkdir(exist_ok=True)
 init_db()
 
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
 @app.get("/chat.png")
 async def get_chat_icon():
-    return FileResponse("d:/MehadiAI-main/chat.png", media_type="image/png")
+    icon_path = BASE_DIR / "chat.png"
+    if icon_path.exists():
+        return FileResponse(str(icon_path), media_type="image/png")
+    return JSONResponse({"error": "Icon not found"}, status_code=404)
 
 
 @app.get("/")
@@ -102,8 +108,13 @@ async def pin_chat(thread_id: str):
 
 @app.put("/conversations/{thread_id}/rename")
 async def rename_chat(thread_id: str, request: Request):
-    data = await request.json()
-    new_title = data.get("title", "")
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body."}, status_code=400)
+    new_title = (data.get("title") or "").strip()
+    if not new_title:
+        return JSONResponse({"error": "Title cannot be empty."}, status_code=400)
     success = rename_conversation(thread_id, new_title)
     return {"success": success}
 
