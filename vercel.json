@@ -8,10 +8,6 @@
   ],
   "routes": [
     {
-      "src": "/chat.png",
-      "dest": "/chat.png"
-    },
-    {
       "src": "/(.*)",
       "dest": "app.py"
     }

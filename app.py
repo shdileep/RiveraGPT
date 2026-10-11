@@ -72,6 +72,7 @@ except Exception:
 
 
 @app.get("/chat.png")
+@app.get("/favicon.ico")
 @app.get("/api/chat.png")
 @app.get("/api/index.py/chat.png")
 async def get_chat_icon():
