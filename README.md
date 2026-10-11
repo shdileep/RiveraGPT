@@ -50,63 +50,7 @@ RiveraGPT/
 └── README.md              # Project documentation
 ```
 
-## Prerequisites
 
-- Python 3.11+
-- Google Gemini API key (`GOOGLE_API_KEY`)
-- Tavily API key (`TAVILY_API_KEY`) for live web search (optional)
-
-## Environment Configuration
-
-Create a `.env` file in the project root:
-
-```env
-GOOGLE_API_KEY=your_google_gemini_api_key
-TAVILY_API_KEY=your_tavily_api_key
-GEMINI_MODEL=gemini-2.5-flash
-```
-
-## Getting Started Locally
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/shdileep/RiveraGPT.git
-cd RiveraGPT
-```
-
-### 2. Set up virtual environment
-
-```bash
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Run automated tests
-
-```bash
-python -m pytest tests -v
-```
-
-### 5. Launch the application
-
-```bash
-python app.py
-```
-
-The web interface will be accessible at:
-```text
-http://127.0.0.1:8080
-```
 
 ## License
 
