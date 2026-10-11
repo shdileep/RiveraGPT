@@ -8,7 +8,10 @@ from security.guardrails import guardrails_engine
 
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, AIMessageChunk
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
+try:
+    from langchain_openai import ChatOpenAI
+except ImportError:
+    ChatOpenAI = None
 
 logger = logging.getLogger("RiveraGPT.Router")
 
