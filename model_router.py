@@ -79,32 +79,155 @@ def get_ranked_fallback_chain(selected_model_key: str, intent: str) -> List[str]
     elif selected_model_key == "indic":
         effective_intent = "INDIC_LANGUAGE"
 
-    # Priority model allocation based on effective intent
+    # Priority model allocation based on effective intent & available providers
     has_google = bool(os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"))
+    has_hf = bool(
+        os.getenv("HUGGINGFACE_API_KEY")
+        or os.getenv("HF_TOKEN")
+        or os.getenv("HUGGING_FACE_API_KEY")
+        or os.getenv("HUGGINGFACE_HUB_TOKEN")
+    )
     has_openai = bool(os.getenv("OPENAI_API_KEY"))
+    has_groq = bool(os.getenv("GROQ_API_KEY"))
 
-    if has_google:
-        if effective_intent == "INDIC_LANGUAGE":
-            priority_keys = ["google/gemini-2.5-flash", "sarvam/sarvam-30b", "openai/gpt-4o", "ollama/gemma:r3", "ollama/qwen3:8b"]
+    if has_hf:
+        if effective_intent == "CODING":
+            priority_keys = [
+                "huggingface/qwen-2.5-coder-32b",
+                "huggingface/llama-3.3-70b",
+                "huggingface/deepseek-r1-qwen-32b",
+                "google/gemini-2.5-pro",
+                "google/gemini-2.5-flash",
+                "huggingface/gemma-r3",
+                "huggingface/qwen-2.5-coder-7b",
+                "huggingface/codellama-34b",
+                "groq/llama-3.3-70b-versatile",
+                "vllm/gemma-3-27b-it",
+                "ollama/gemma:r3",
+                "ollama/qwen3:30b",
+                "openai/gpt-4o"
+            ]
         elif effective_intent == "REASONING":
-            priority_keys = ["google/gemini-2.5-pro", "google/gemini-2.5-flash", "openai/gpt-4o", "ollama/gemma:r3", "vllm/gemma-r3", "ollama/deepseek-r1:7b"]
-        elif effective_intent == "CODING":
-            priority_keys = ["google/gemini-2.5-pro", "google/gemini-2.5-flash", "openai/gpt-4o", "vllm/gemma-3-27b-it", "ollama/gemma:r3", "ollama/qwen3:30b"]
+            priority_keys = [
+                "huggingface/deepseek-r1-qwen-32b",
+                "google/gemini-2.5-pro",
+                "huggingface/llama-3.3-70b",
+                "huggingface/qwen-2.5-72b",
+                "google/gemini-2.5-flash",
+                "huggingface/gemma-r3",
+                "vllm/gemma-r3",
+                "ollama/gemma:r3",
+                "openai/gpt-4o",
+                "groq/llama-3.3-70b-versatile",
+                "ollama/deepseek-r1:7b"
+            ]
+        elif effective_intent == "INDIC_LANGUAGE":
+            priority_keys = [
+                "google/gemini-2.5-flash",
+                "sarvam/sarvam-30b",
+                "huggingface/qwen-2.5-72b",
+                "huggingface/llama-3.3-70b",
+                "sarvam/sarvam-105b",
+                "openai/gpt-4o",
+                "ollama/gemma:r3",
+                "ollama/qwen3:8b"
+            ]
         elif effective_intent == "SIMPLE_FAST":
-            priority_keys = ["google/gemini-2.5-flash", "openai/gpt-4o-mini", "ollama/gemma:r3", "vllm/gemma-3-4b-it", "ollama/qwen3:8b"]
+            priority_keys = [
+                "huggingface/qwen-2.5-coder-7b",
+                "google/gemini-2.5-flash",
+                "huggingface/llama-3.1-8b",
+                "huggingface/gemma-2-9b",
+                "groq/llama-3.1-8b-instant",
+                "openai/gpt-4o-mini",
+                "vllm/gemma-3-4b-it",
+                "ollama/gemma:r3",
+                "ollama/qwen3:8b"
+            ]
         else:
-            priority_keys = ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "ollama/gemma:r3", "vllm/gemma-3-27b-it", "openai/gpt-4o-mini", "ollama/qwen3:8b"]
+            priority_keys = [
+                "google/gemini-2.5-flash",
+                "huggingface/qwen-2.5-coder-32b",
+                "huggingface/llama-3.3-70b",
+                "google/gemini-2.5-pro",
+                "huggingface/gemma-r3",
+                "huggingface/deepseek-r1-qwen-32b",
+                "groq/llama-3.3-70b-versatile",
+                "openai/gpt-4o-mini",
+                "vllm/gemma-r3",
+                "ollama/gemma:r3"
+            ]
+    elif has_google:
+        if effective_intent == "INDIC_LANGUAGE":
+            priority_keys = [
+                "google/gemini-2.5-flash",
+                "sarvam/sarvam-30b",
+                "huggingface/qwen-2.5-72b",
+                "openai/gpt-4o",
+                "ollama/gemma:r3",
+                "ollama/qwen3:8b"
+            ]
+        elif effective_intent == "REASONING":
+            priority_keys = [
+                "google/gemini-2.5-pro",
+                "google/gemini-2.5-flash",
+                "huggingface/deepseek-r1-qwen-32b",
+                "huggingface/llama-3.3-70b",
+                "huggingface/gemma-r3",
+                "openai/gpt-4o",
+                "ollama/gemma:r3",
+                "vllm/gemma-r3",
+                "groq/llama-3.3-70b-versatile"
+            ]
+        elif effective_intent == "CODING":
+            priority_keys = [
+                "google/gemini-2.5-pro",
+                "google/gemini-2.5-flash",
+                "huggingface/qwen-2.5-coder-32b",
+                "huggingface/llama-3.3-70b",
+                "huggingface/deepseek-r1-qwen-32b",
+                "huggingface/gemma-r3",
+                "huggingface/qwen-2.5-coder-7b",
+                "groq/llama-3.3-70b-versatile",
+                "openai/gpt-4o",
+                "vllm/gemma-3-27b-it",
+                "ollama/gemma:r3",
+                "ollama/qwen3:30b"
+            ]
+        elif effective_intent == "SIMPLE_FAST":
+            priority_keys = [
+                "google/gemini-2.5-flash",
+                "huggingface/qwen-2.5-coder-7b",
+                "huggingface/llama-3.1-8b",
+                "openai/gpt-4o-mini",
+                "groq/llama-3.1-8b-instant",
+                "ollama/gemma:r3",
+                "vllm/gemma-3-4b-it",
+                "ollama/qwen3:8b"
+            ]
+        else:
+            priority_keys = [
+                "google/gemini-2.5-flash",
+                "google/gemini-2.5-pro",
+                "huggingface/qwen-2.5-coder-32b",
+                "huggingface/llama-3.3-70b",
+                "huggingface/gemma-r3",
+                "ollama/gemma:r3",
+                "vllm/gemma-3-27b-it",
+                "openai/gpt-4o-mini",
+                "ollama/qwen3:8b"
+            ]
     else:
         if effective_intent == "INDIC_LANGUAGE":
-            priority_keys = ["sarvam/sarvam-30b", "ollama/gemma:r3", "ollama/qwen3:8b", "openai/gpt-4o"]
+            priority_keys = ["sarvam/sarvam-30b", "huggingface/qwen-2.5-72b", "ollama/gemma:r3", "ollama/qwen3:8b", "openai/gpt-4o"]
         elif effective_intent == "REASONING":
-            priority_keys = ["ollama/gemma:r3", "vllm/gemma-r3", "vllm/gemma-3-27b-it", "ollama/deepseek-r1:7b", "ollama/qwen3:30b", "openai/gpt-4o", "groq/llama-3.3-70b-versatile"]
+            priority_keys = ["huggingface/deepseek-r1-qwen-32b", "huggingface/llama-3.3-70b", "huggingface/gemma-r3", "ollama/gemma:r3", "vllm/gemma-r3", "vllm/gemma-3-27b-it", "ollama/deepseek-r1:7b", "openai/gpt-4o", "groq/llama-3.3-70b-versatile"]
         elif effective_intent == "CODING":
-            priority_keys = ["vllm/gemma-3-27b-it", "ollama/gemma:r3", "ollama/qwen3:30b", "groq/llama-3.3-70b-versatile", "openai/gpt-4o", "ollama/qwen3:8b"]
+            priority_keys = ["huggingface/qwen-2.5-coder-32b", "huggingface/llama-3.3-70b", "huggingface/deepseek-r1-qwen-32b", "huggingface/gemma-r3", "huggingface/qwen-2.5-coder-7b", "vllm/gemma-3-27b-it", "ollama/gemma:r3", "ollama/qwen3:30b", "groq/llama-3.3-70b-versatile", "openai/gpt-4o", "ollama/qwen3:8b"]
         elif effective_intent == "SIMPLE_FAST":
-            priority_keys = ["ollama/gemma:r3", "vllm/gemma-3-4b-it", "ollama/qwen3:8b", "groq/llama-3.3-70b-versatile", "openai/gpt-4o-mini"]
+            priority_keys = ["huggingface/qwen-2.5-coder-7b", "huggingface/llama-3.1-8b", "ollama/gemma:r3", "vllm/gemma-3-4b-it", "ollama/qwen3:8b", "groq/llama-3.3-70b-versatile", "openai/gpt-4o-mini"]
         else:
-            priority_keys = ["ollama/gemma:r3", "vllm/gemma-3-27b-it", "ollama/qwen3:8b", "groq/llama-3.3-70b-versatile", "openai/gpt-4o-mini"]
+            priority_keys = ["huggingface/qwen-2.5-coder-32b", "huggingface/llama-3.3-70b", "huggingface/gemma-r3", "ollama/gemma:r3", "vllm/gemma-3-27b-it", "ollama/qwen3:8b", "groq/llama-3.3-70b-versatile", "openai/gpt-4o-mini"]
 
     # Explicit backend key selected if provided
     if selected_model_key and selected_model_key not in ["auto", "fast", "reasoning", "coding", "indic"]:
@@ -167,11 +290,19 @@ def execute_single_provider_stream(
                     "token": sanitized_token
                 }
 
-    # --- 2. OpenAI / Groq / Smallest AI / Sarvam / vLLM OpenAI-Compatible Providers ---
-    elif provider in ["openai", "groq", "smallest", "sarvam", "vllm"]:
+    # --- 2. OpenAI / Groq / Smallest AI / Sarvam / vLLM / Hugging Face OpenAI-Compatible Providers ---
+    elif provider in ["openai", "groq", "smallest", "sarvam", "vllm", "huggingface"]:
         if provider == "openai":
             api_key = os.getenv("OPENAI_API_KEY")
             base_url = None
+        elif provider == "huggingface":
+            api_key = (
+                os.getenv("HUGGINGFACE_API_KEY")
+                or os.getenv("HF_TOKEN")
+                or os.getenv("HUGGING_FACE_API_KEY")
+                or os.getenv("HUGGINGFACE_HUB_TOKEN")
+            )
+            base_url = os.getenv("HUGGINGFACE_BASE_URL", "https://router.huggingface.co/hf-inference/v1")
         elif provider == "groq":
             api_key = os.getenv("GROQ_API_KEY")
             base_url = "https://api.groq.com/openai/v1"
@@ -191,25 +322,73 @@ def execute_single_provider_stream(
         if provider != "vllm" and (not api_key or api_key.startswith("your_")):
             raise ValueError(f"{provider.capitalize()} API key is missing or not configured.")
 
-        kwargs = {
-            "model": model_id,
-            "api_key": api_key if api_key else "EMPTY",
-            "temperature": 0.3,
-            "streaming": True
-        }
-        if base_url:
-            kwargs["base_url"] = base_url
-
-        llm = ChatOpenAI(**kwargs)
-
-        for chunk in llm.stream(full_messages):
-            content = getattr(chunk, "content", "")
-            if content:
-                token_count += len(str(content).split())
-                sanitized_token = guardrails_engine.process_output_token(str(content))
-                yield {
-                    "token": sanitized_token
+        success = False
+        if ChatOpenAI is not None:
+            try:
+                kwargs = {
+                    "model": model_id,
+                    "api_key": api_key if api_key else "EMPTY",
+                    "temperature": 0.3,
+                    "streaming": True
                 }
+                if base_url:
+                    kwargs["base_url"] = base_url
+
+                llm = ChatOpenAI(**kwargs)
+                for chunk in llm.stream(full_messages):
+                    content = getattr(chunk, "content", "")
+                    if content:
+                        token_count += len(str(content).split())
+                        sanitized_token = guardrails_engine.process_output_token(str(content))
+                        yield {
+                            "token": sanitized_token
+                        }
+                success = True
+            except Exception as stream_err:
+                if provider != "huggingface":
+                    raise stream_err
+                logger.warning(f"ChatOpenAI stream failed for {model_id}: {stream_err}. Attempting direct HTTP fallback...")
+
+        if not success:
+            import json
+            import httpx
+            endpoint = f"{base_url.rstrip('/')}/chat/completions" if base_url else "https://api.openai.com/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            formatted_msgs = []
+            for m in full_messages:
+                role = "user"
+                if isinstance(m, SystemMessage):
+                    role = "system"
+                elif isinstance(m, AIMessage):
+                    role = "assistant"
+                formatted_msgs.append({"role": role, "content": str(m.content)})
+
+            body = {
+                "model": model_id,
+                "messages": formatted_msgs,
+                "temperature": 0.3,
+                "stream": True
+            }
+            with httpx.stream("POST", endpoint, headers=headers, json=body, timeout=45.0) as resp:
+                if resp.status_code >= 400:
+                    raise ValueError(f"HTTP {resp.status_code}: {resp.text[:200]}")
+                for line in resp.iter_lines():
+                    if line.startswith("data: "):
+                        data_str = line[6:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            item = json.loads(data_str)
+                            delta = item.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            if delta:
+                                token_count += len(delta.split())
+                                sanitized_token = guardrails_engine.process_output_token(delta)
+                                yield {"token": sanitized_token}
+                        except Exception:
+                            continue
 
     # --- 3. Ollama Local Provider ---
     elif provider == "ollama":

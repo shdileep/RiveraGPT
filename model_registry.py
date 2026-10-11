@@ -132,6 +132,107 @@ STATIC_MODEL_CATALOG: Dict[str, Dict[str, Any]] = {
         "cost_tier": "low"
     },
 
+    # Hugging Face Serverless Open-Source Models (Qwen, Llama, Gemma R3, DeepSeek)
+    "huggingface/qwen-2.5-coder-32b": {
+        "provider": "huggingface",
+        "model_id": "Qwen/Qwen2.5-Coder-32B-Instruct",
+        "display_name": "Hugging Face Qwen 2.5 Coder 32B",
+        "capabilities": ["chat", "coding", "reasoning"],
+        "context_window": 32768,
+        "speed_score": 90,
+        "quality_score": 96,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+    "huggingface/qwen-2.5-coder-7b": {
+        "provider": "huggingface",
+        "model_id": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "display_name": "Hugging Face Qwen 2.5 Coder 7B",
+        "capabilities": ["chat", "coding", "fast"],
+        "context_window": 32768,
+        "speed_score": 96,
+        "quality_score": 90,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+    "huggingface/qwen-2.5-72b": {
+        "provider": "huggingface",
+        "model_id": "Qwen/Qwen2.5-72B-Instruct",
+        "display_name": "Hugging Face Qwen 2.5 72B",
+        "capabilities": ["chat", "reasoning", "coding"],
+        "context_window": 32768,
+        "speed_score": 86,
+        "quality_score": 96,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+    "huggingface/llama-3.3-70b": {
+        "provider": "huggingface",
+        "model_id": "meta-llama/Llama-3.3-70B-Instruct",
+        "display_name": "Hugging Face Llama 3.3 70B",
+        "capabilities": ["chat", "reasoning", "coding"],
+        "context_window": 128000,
+        "speed_score": 88,
+        "quality_score": 95,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+    "huggingface/llama-3.1-8b": {
+        "provider": "huggingface",
+        "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+        "display_name": "Hugging Face Llama 3.1 8B",
+        "capabilities": ["chat", "fast", "coding"],
+        "context_window": 131072,
+        "speed_score": 95,
+        "quality_score": 88,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+    "huggingface/codellama-34b": {
+        "provider": "huggingface",
+        "model_id": "meta-llama/CodeLlama-34b-Instruct",
+        "display_name": "Hugging Face CodeLlama 34B",
+        "capabilities": ["chat", "coding"],
+        "context_window": 16384,
+        "speed_score": 88,
+        "quality_score": 91,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+    "huggingface/gemma-r3": {
+        "provider": "huggingface",
+        "model_id": "google/gemma-2-27b-it",
+        "display_name": "Hugging Face Gemma R3 / 2 27B",
+        "capabilities": ["chat", "reasoning", "coding", "fast"],
+        "context_window": 8192,
+        "speed_score": 91,
+        "quality_score": 93,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+    "huggingface/gemma-2-9b": {
+        "provider": "huggingface",
+        "model_id": "google/gemma-2-9b-it",
+        "display_name": "Hugging Face Gemma 2 9B",
+        "capabilities": ["chat", "fast", "coding"],
+        "context_window": 8192,
+        "speed_score": 94,
+        "quality_score": 89,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+    "huggingface/deepseek-r1-qwen-32b": {
+        "provider": "huggingface",
+        "model_id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+        "display_name": "Hugging Face DeepSeek R1 Distill Qwen 32B",
+        "capabilities": ["chat", "reasoning", "coding"],
+        "context_window": 32768,
+        "speed_score": 87,
+        "quality_score": 97,
+        "is_local": False,
+        "cost_tier": "free"
+    },
+
     # Local Ollama Models (Qwen3, Gemma3, DeepSeek-R1, Phi-4, Llama 3)
     "ollama/qwen3:8b": {
         "provider": "ollama",
@@ -570,7 +671,7 @@ def normalize_parameters(
             "top_p": top_p,
             "max_output_tokens": max_tokens,
         }
-    elif provider in ["openai", "groq", "smallest", "sarvam", "vllm"]:
+    elif provider in ["openai", "groq", "smallest", "sarvam", "vllm", "huggingface"]:
         return {
             "temperature": temperature,
             "top_p": top_p,
