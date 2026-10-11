@@ -1166,6 +1166,12 @@
                 })
             });
 
+            if (!response.ok) {
+                bubble.innerHTML = `<span style="color:var(--accent-rose)">Request error (${response.status}): Unable to get response from server.</span>`;
+                isGenerating = false;
+                return;
+            }
+
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
 
