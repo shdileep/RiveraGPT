@@ -63,6 +63,17 @@ class LongTermMemory(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class ConversationDocument(Base):
+    __tablename__ = "conversation_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    thread_id = Column(String, index=True)
+    filename = Column(String)
+    file_type = Column(String)
+    content = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 def init_db():
     Base.metadata.create_all(bind=engine)
     with engine.connect() as conn:
@@ -155,6 +166,7 @@ def delete_conversation(thread_id: str):
     db = SessionLocal()
     try:
         db.query(ChatMessage).filter(ChatMessage.thread_id == thread_id).delete()
+        db.query(ConversationDocument).filter(ConversationDocument.thread_id == thread_id).delete()
         db.query(Conversation).filter(Conversation.thread_id == thread_id).delete()
         db.commit()
         return True
@@ -241,5 +253,35 @@ def search_memory(thread_id: str, query: str):
 
         return "\n".join([f"- {m.memory}" for m in memories])
 
+    finally:
+        db.close()
+
+
+def save_conversation_document(thread_id: str, filename: str, file_type: str, content: str):
+    db = SessionLocal()
+    try:
+        doc = ConversationDocument(
+            thread_id=thread_id,
+            filename=filename,
+            file_type=file_type,
+            content=content,
+            created_at=datetime.utcnow()
+        )
+        db.add(doc)
+        db.commit()
+        return doc
+    finally:
+        db.close()
+
+
+def get_conversation_documents(thread_id: str):
+    db = SessionLocal()
+    try:
+        return (
+            db.query(ConversationDocument)
+            .filter(ConversationDocument.thread_id == thread_id)
+            .order_by(ConversationDocument.created_at.asc())
+            .all()
+        )
     finally:
         db.close()

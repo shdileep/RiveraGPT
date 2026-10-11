@@ -247,6 +247,29 @@ def get_ranked_fallback_chain(selected_model_key: str, intent: str) -> List[str]
     return chain
 
 
+def sanitize_message_alternation(system_prompt: str, messages: List[Any]) -> List[Any]:
+    """
+    Ensures message turns strictly alternate between User and Assistant,
+    coalesces adjacent messages of identical roles, and places System prompt first.
+    """
+    sanitized = []
+    for m in messages:
+        c = str(getattr(m, "content", "") or "").strip()
+        if not c:
+            continue
+        if not sanitized:
+            if isinstance(m, AIMessage):
+                continue
+            sanitized.append(m)
+        else:
+            last = sanitized[-1]
+            if type(last) is type(m):
+                sanitized[-1] = type(last)(content=str(last.content) + "\n\n" + c)
+            else:
+                sanitized.append(m)
+    return [SystemMessage(content=system_prompt)] + sanitized
+
+
 def execute_single_provider_stream(
     model_key: str,
     messages: List[Any],
@@ -265,8 +288,8 @@ def execute_single_provider_stream(
     start_time = time.time()
     token_count = 0
 
-    # Ensure system prompt is first message
-    full_messages = [SystemMessage(content=system_prompt)] + messages
+    # Ensure system prompt is first message and turns alternate cleanly
+    full_messages = sanitize_message_alternation(system_prompt, messages)
 
     # --- 1. Google Gemini Provider ---
     if provider == "google":

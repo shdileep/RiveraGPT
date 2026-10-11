@@ -483,14 +483,132 @@
             background: var(--surface-dark);
             border: 1px solid var(--border-glow);
             border-radius: 18px;
-            padding: 10px 14px;
-            display: flex; align-items: flex-end;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
             box-shadow: var(--shadow-glow);
             transition: border-color 0.2s ease;
         }
 
         .input-box:focus-within {
             border-color: var(--accent-violet);
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        .pending-attachment-container {
+            display: flex;
+            align-items: center;
+            padding: 4px 6px 8px 6px;
+            width: 100%;
+        }
+
+        .pending-file-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+            color: var(--text-main);
+            animation: fadeInChip 0.18s ease-out;
+        }
+
+        @keyframes fadeInChip {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pending-file-chip .file-icon {
+            font-size: 14px;
+        }
+
+        .pending-file-chip .file-name {
+            font-weight: 500;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pending-file-chip .file-size {
+            color: var(--text-secondary);
+            font-size: 11.5px;
+        }
+
+        .pending-file-chip .file-remove-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .pending-file-chip .file-remove-btn:hover {
+            color: var(--accent-rose);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .msg-attachment-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(140, 104, 252, 0.15);
+            border: 1px solid rgba(140, 104, 252, 0.35);
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 12.5px;
+            margin-bottom: 8px;
+            color: #e2d9fc;
+        }
+
+        /* Three-dot typing indicator */
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 12px 18px;
+            background: var(--surface-dark);
+            border: 1px solid var(--border-dark);
+            border-radius: 16px 16px 16px 4px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-secondary);
+            border-radius: 50%;
+            opacity: 0.35;
+            animation: typingPulse 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingPulse {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.35;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+                background-color: var(--accent-violet);
+            }
         }
 
         .icon-btn {
@@ -724,16 +842,19 @@
 
     <div class="input-dock">
         <div class="input-box">
-            <input type="file" id="fileAttachment" style="display:none;" accept=".pdf,.docx,.txt,.md,.py,.csv" onchange="handleFileUpload()">
-            <button class="icon-btn" onclick="document.getElementById('fileAttachment').click()" title="Attach Document (RAG)">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-            </button>
+            <div id="pendingAttachmentContainer" class="pending-attachment-container" style="display:none;"></div>
+            <div class="input-row">
+                <input type="file" id="fileAttachment" style="display:none;" accept=".pdf,.docx,.txt,.md,.py,.csv" onchange="handleFileSelection(event)">
+                <button class="icon-btn" onclick="document.getElementById('fileAttachment').click()" title="Attach Document (PDF, DOCX, TXT, MD, PY, CSV)">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                </button>
 
-            <textarea id="chatInput" class="chat-input" placeholder="Message RiveraGPT..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+                <textarea id="chatInput" class="chat-input" placeholder="Message RiveraGPT..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
 
-            <button class="send-btn" onclick="sendChatMessage()" title="Send Message">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </button>
+                <button class="send-btn" onclick="sendChatMessage()" title="Send Message">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
         </div>
     </div>
 </main>
@@ -744,6 +865,7 @@
 
     let lastUserPrompt = "";
     let isGenerating = false;
+    let pendingAttachment = null;
 
     const chatViewport = document.getElementById("chatViewport");
     const chatInput = document.getElementById("chatInput");
@@ -1112,49 +1234,162 @@
         return html;
     }
 
-    async function sendChatMessage() {
-        const text = chatInput.value.trim();
-        if (!text || isGenerating) return;
+    function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
 
-        isGenerating = true;
-        lastUserPrompt = text;
-        chatInput.value = "";
-        autoResize(chatInput);
+    function handleFileSelection(e) {
+        if (!e.target.files || !e.target.files.length) return;
+        pendingAttachment = e.target.files[0];
+        renderPendingAttachment();
+        e.target.value = "";
+    }
 
-        appendMessageUI("user", text);
+    function renderPendingAttachment() {
+        const container = document.getElementById("pendingAttachmentContainer");
+        if (!pendingAttachment) {
+            container.style.display = "none";
+            container.innerHTML = "";
+            return;
+        }
+        const sizeKB = (pendingAttachment.size / 1024).toFixed(1);
+        const sizeStr = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + " MB" : sizeKB + " KB";
+        container.innerHTML = `
+            <div class="pending-file-chip">
+                <span class="file-icon">📄</span>
+                <span class="file-name">${escapeHtml(pendingAttachment.name)}</span>
+                <span class="file-size">(${sizeStr})</span>
+                <button type="button" class="file-remove-btn" onclick="removePendingAttachment()" title="Remove file">✕</button>
+            </div>
+        `;
+        container.style.display = "flex";
+        chatInput.focus();
+    }
 
-        // Bot message shell
-        const botRow = document.createElement("div");
-        botRow.className = "msg-row assistant";
+    function removePendingAttachment() {
+        pendingAttachment = null;
+        renderPendingAttachment();
+    }
+
+    function appendUserMessageHTML(htmlContent, rawText) {
+        document.getElementById("welcomeHero").style.display = "none";
+        document.getElementById("actionCards").style.display = "none";
+
+        const row = document.createElement("div");
+        row.className = "msg-row user";
+
         const avatar = document.createElement("div");
-        avatar.className = "msg-avatar avatar-bot";
-        avatar.innerHTML = `<img src="/chat.png" alt="RiveraGPT">`;
+        avatar.className = "msg-avatar avatar-user";
+        avatar.textContent = "U";
 
         const wrapper = document.createElement("div");
         wrapper.className = "msg-bubble-wrapper";
 
         const bubble = document.createElement("div");
         bubble.className = "msg-bubble";
-
-        const toolbar = document.createElement("div");
-        toolbar.className = "msg-toolbar";
-        toolbar.innerHTML = `
-            <button class="chatgpt-icon-btn" onclick="copyTextFromBubble(this)" title="Copy">${SVG_COPY}</button>
-            <button class="chatgpt-icon-btn" onclick="toggleLike(this)" title="Good response">${SVG_LIKE}</button>
-            <button class="chatgpt-icon-btn" onclick="toggleDislike(this)" title="Bad response">${SVG_DISLIKE}</button>
-            <button class="chatgpt-icon-btn" onclick="shareResponse(this)" title="Share">${SVG_SHARE}</button>
-            <button class="chatgpt-icon-btn" onclick="regenerateLastResponse(this)" title="Regenerate">${SVG_REGENERATE}</button>
-            <button class="chatgpt-icon-btn" title="More options">${SVG_MORE}</button>
-        `;
+        bubble.innerHTML = htmlContent;
 
         wrapper.appendChild(bubble);
-        wrapper.appendChild(toolbar);
 
-        botRow.appendChild(avatar);
-        botRow.appendChild(wrapper);
-        chatViewport.appendChild(botRow);
+        const userActions = document.createElement("div");
+        userActions.className = "user-actions";
+        userActions.innerHTML = `
+            <button class="chatgpt-icon-btn" onclick="setInput(\`${rawText.replace(/`/g, '\\`')}\`)" title="Edit prompt">${SVG_EDIT}</button>
+            <button class="chatgpt-icon-btn" onclick="copyText(this, \`${rawText.replace(/`/g, '\\`')}\`)" title="Copy prompt">${SVG_COPY}</button>
+        `;
 
+        row.appendChild(userActions);
+        row.appendChild(wrapper);
+        row.appendChild(avatar);
+
+        chatViewport.appendChild(row);
+        chatViewport.scrollTop = chatViewport.scrollHeight;
+    }
+
+    async function sendChatMessage() {
+        const rawText = chatInput.value.trim();
+        if ((!rawText && !pendingAttachment) || isGenerating) return;
+
+        isGenerating = true;
+        const attachedFile = pendingAttachment;
+        pendingAttachment = null;
+        renderPendingAttachment();
+
+        let text = rawText;
+        if (!text && attachedFile) {
+            text = "Please analyze and summarize the attached document.";
+        }
+
+        lastUserPrompt = text;
+        chatInput.value = "";
+        autoResize(chatInput);
+
+        // Display user message in UI with optional attachment badge
+        let userDisplayHTML = "";
+        if (attachedFile) {
+            userDisplayHTML += `<div class="msg-attachment-badge"><span>📄</span> <strong>${escapeHtml(attachedFile.name)}</strong></div>`;
+        }
+        userDisplayHTML += formatMarkdown(text);
+        appendUserMessageHTML(userDisplayHTML, text);
+
+        // 1. Show simple three-dot typing indicator (no pre-response card or empty box)
+        const typingRow = document.createElement("div");
+        typingRow.className = "msg-row assistant";
+        typingRow.id = "riveraTypingIndicator";
+        typingRow.innerHTML = `
+            <div class="msg-avatar avatar-bot"><img src="/chat.png" alt="RiveraGPT"></div>
+            <div class="msg-bubble-wrapper">
+                <div class="typing-indicator">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            </div>
+        `;
+        chatViewport.appendChild(typingRow);
+        chatViewport.scrollTop = chatViewport.scrollHeight;
+
+        // 2. If document is attached, upload it to bind to current thread before streaming
+        if (attachedFile) {
+            try {
+                const formData = new FormData();
+                formData.append("file", attachedFile);
+                formData.append("thread_id", threadId);
+                await fetch("/upload", { method: "POST", body: formData });
+            } catch (upErr) {
+                console.warn("Upload warning:", upErr);
+            }
+        }
+
+        // 3. Stream RiveraGPT response
+        let botRow = null;
+        let bubble = null;
         let fullResponse = "";
+
+        function ensureBotRow() {
+            if (!botRow) {
+                if (typingRow && typingRow.parentNode) {
+                    typingRow.parentNode.removeChild(typingRow);
+                }
+                botRow = document.createElement("div");
+                botRow.className = "msg-row assistant";
+                const avatar = document.createElement("div");
+                avatar.className = "msg-avatar avatar-bot";
+                avatar.innerHTML = `<img src="/chat.png" alt="RiveraGPT">`;
+
+                const wrapper = document.createElement("div");
+                wrapper.className = "msg-bubble-wrapper";
+
+                bubble = document.createElement("div");
+                bubble.className = "msg-bubble";
+
+                wrapper.appendChild(bubble);
+                botRow.appendChild(avatar);
+                botRow.appendChild(wrapper);
+                chatViewport.appendChild(botRow);
+            }
+        }
 
         try {
             const response = await fetch("/chat/stream", {
@@ -1168,8 +1403,8 @@
             });
 
             if (!response.ok) {
+                ensureBotRow();
                 bubble.innerHTML = `<span style="color:var(--accent-rose)">Request error (${response.status}): Unable to get response from server.</span>`;
-                isGenerating = false;
                 return;
             }
 
@@ -1187,40 +1422,44 @@
                         try {
                             const data = JSON.parse(line.substring(6));
                             if (data.token) {
+                                ensureBotRow();
                                 fullResponse += data.token;
                                 bubble.innerHTML = formatMarkdown(fullResponse);
                                 chatViewport.scrollTop = chatViewport.scrollHeight;
                             } else if (data.error) {
+                                ensureBotRow();
                                 bubble.innerHTML = `<span style="color:var(--accent-rose)">${data.error}</span>`;
                             }
                         } catch (e) {}
                     }
                 }
             }
+
+            // Once generation completes, add the toolbar
+            if (botRow && bubble) {
+                const wrapper = botRow.querySelector(".msg-bubble-wrapper");
+                const toolbar = document.createElement("div");
+                toolbar.className = "msg-toolbar";
+                toolbar.innerHTML = `
+                    <button class="chatgpt-icon-btn" onclick="copyTextFromBubble(this)" title="Copy">${SVG_COPY}</button>
+                    <button class="chatgpt-icon-btn" onclick="toggleLike(this)" title="Good response">${SVG_LIKE}</button>
+                    <button class="chatgpt-icon-btn" onclick="toggleDislike(this)" title="Bad response">${SVG_DISLIKE}</button>
+                    <button class="chatgpt-icon-btn" onclick="shareResponse(this)" title="Share">${SVG_SHARE}</button>
+                    <button class="chatgpt-icon-btn" onclick="regenerateLastResponse(this)" title="Regenerate">${SVG_REGENERATE}</button>
+                    <button class="chatgpt-icon-btn" title="More options">${SVG_MORE}</button>
+                `;
+                wrapper.appendChild(toolbar);
+            }
+
         } catch (e) {
+            ensureBotRow();
             bubble.innerHTML = `<span style="color:var(--accent-rose)">Connection failed: ${e.message}</span>`;
-        }
-
-        isGenerating = false;
-        loadConversations();
-    }
-
-    async function handleFileUpload() {
-        const fileInput = document.getElementById("fileAttachment");
-        if (!fileInput.files.length) return;
-        const file = fileInput.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("thread_id", threadId);
-
-        appendMessageUI("user", `Uploading document: ${file.name}`);
-
-        try {
-            const res = await fetch("/upload", { method: "POST", body: formData });
-            const data = await res.json();
-            appendMessageUI("assistant", data.message || "File processed for RAG search.");
-        } catch (e) {
-            appendMessageUI("assistant", `Upload failed: ${e.message}`);
+        } finally {
+            if (typingRow && typingRow.parentNode) {
+                typingRow.parentNode.removeChild(typingRow);
+            }
+            isGenerating = false;
+            loadConversations();
         }
     }
 

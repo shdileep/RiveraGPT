@@ -62,3 +62,19 @@ def test_memory_save_and_search():
     save_memory(thread_id, "Favorite programming language is Python")
     res = search_memory(thread_id, "Python")
     assert "Favorite programming language is Python" in res
+
+
+def test_conversation_document_persistence():
+    from database import save_conversation_document, get_conversation_documents
+    thread_id = f"test_doc_{uuid.uuid4().hex[:8]}"
+    save_conversation_document(thread_id, "report.pdf", ".pdf", "Revenue in Q3 was $10M and growth was 25%.")
+    docs = get_conversation_documents(thread_id)
+    assert len(docs) == 1
+    assert docs[0].filename == "report.pdf"
+    assert "Revenue in Q3 was $10M" in docs[0].content
+
+    # Delete conversation cleans up documents
+    delete_conversation(thread_id)
+    docs_after_delete = get_conversation_documents(thread_id)
+    assert len(docs_after_delete) == 0
+

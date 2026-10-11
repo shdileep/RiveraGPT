@@ -26,9 +26,11 @@ from database import (
     list_conversations,
     toggle_pin_conversation,
     rename_conversation,
-    delete_conversation
+    delete_conversation,
+    save_conversation_document,
+    get_conversation_documents
 )
-from rag import add_document_to_rag
+from rag import add_document_to_rag, read_file_text
 from tools import set_current_thread_id
 from model_registry import registry, health_tracker
 
@@ -209,20 +211,44 @@ async def upload_document(
         safe_filename = filename.replace(" ", "_")
         target_path = UPLOADS_DIR / f"{file_id}_{safe_filename}"
 
+        content_bytes = await file.read()
         with open(target_path, "wb") as f:
-            f.write(await file.read())
+            f.write(content_bytes)
 
-        create_or_update_conversation(thread_id, "Uploaded document")
-        result = add_document_to_rag(file_path=str(target_path), thread_id=thread_id)
+        # Extract full document text
+        try:
+            extracted_text = read_file_text(str(target_path))
+        except Exception:
+            extracted_text = content_bytes.decode("utf-8", errors="ignore")
+
+        if not extracted_text.strip():
+            extracted_text = f"[Document {filename} uploaded, empty text content]"
+
+        # Save into SQLite conversation documents store for guaranteed context retention
+        save_conversation_document(
+            thread_id=thread_id,
+            filename=filename,
+            file_type=suffix,
+            content=extracted_text
+        )
+
+        create_or_update_conversation(thread_id, f"Document: {filename}")
+
+        # Index into RAG vector store if available
+        try:
+            add_document_to_rag(file_path=str(target_path), thread_id=thread_id)
+        except Exception as rag_err:
+            print(f"[RAG] Note: Vector store indexing skipped: {rag_err}")
 
         return JSONResponse({
             "success": True,
-            "message": f"Uploaded {result['filename']} and created {result['chunks']} chunks."
+            "filename": filename,
+            "message": f"Document '{filename}' attached to conversation."
         })
 
     except Exception as e:
         return JSONResponse(
-            {"success": False, "message": "Sorry, I couldn't process that file. Please try again."},
+            {"success": False, "message": f"Sorry, could not process that file: {str(e)}"},
             status_code=500
         )
 
@@ -240,21 +266,23 @@ async def chat_stream(request: Request):
     except Exception:
         return JSONResponse({"error": "Invalid JSON body."}, status_code=400)
 
-    user_message = data.get("message", "")
+    user_message = data.get("message", "").strip()
     thread_id = data.get("thread_id", "default")
     selected_model = data.get("model", "auto")
 
-    if not user_message.strip():
+    if not user_message:
         return JSONResponse({"error": "Message is required."}, status_code=400)
 
     create_or_update_conversation(thread_id, user_message)
     save_chat_message(thread_id, "user", user_message)
     set_current_thread_id(thread_id)
 
-    # Convert past history to Human/AI messages
+    # Convert past history to Human/AI messages (preserve last 30 turns for rich continuity)
     db_history = get_chat_history(thread_id)
+    recent_db_history = db_history[-30:] if len(db_history) > 30 else db_history
+
     history_messages = []
-    for m in db_history:
+    for m in recent_db_history:
         if m.role == "user":
             history_messages.append(HumanMessage(content=m.content))
         elif m.role == "assistant":
@@ -263,13 +291,26 @@ async def chat_stream(request: Request):
     if not history_messages or history_messages[-1].content != user_message:
         history_messages.append(HumanMessage(content=user_message))
 
+    # Retrieve all documents attached to this conversation
+    conversation_docs = get_conversation_documents(thread_id)
+    doc_context_str = ""
+    if conversation_docs:
+        doc_parts = []
+        for d in conversation_docs:
+            snippet = d.content[:80000] if len(d.content) > 80000 else d.content
+            doc_parts.append(
+                f"### DOCUMENT: {d.filename} (Format: {d.file_type})\n{snippet}\n### END OF DOCUMENT: {d.filename}"
+            )
+        doc_context_str = "\n\n".join(doc_parts)
+
     def event_generator():
         final_answer = ""
         try:
             for item in rivera_stream_chat(
                 user_message=user_message,
                 selected_model_key=selected_model,
-                history_messages=history_messages
+                history_messages=history_messages,
+                document_context=doc_context_str
             ):
                 if "meta" in item:
                     yield sse_data({"meta": item["meta"]})

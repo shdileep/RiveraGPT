@@ -245,15 +245,33 @@ def get_agent(model_name: str | None = None):
 def rivera_stream_chat(
     user_message: str,
     selected_model_key: str = "auto",
-    history_messages: List[Any] = None
+    history_messages: List[Any] = None,
+    document_context: str = ""
 ) -> Generator[Dict[str, Any], None, None]:
     """
-    Stream chat response using RiveraGPT router engine with automatic capability-aware fallback and security guardrails.
+    Stream chat response using RiveraGPT router engine with automatic capability-aware fallback,
+    full conversation context memory, document context, and security guardrails.
     """
+    prompt = SYSTEM_PROMPT
+    if document_context and document_context.strip():
+        prompt += f"""
+
+=== ATTACHED CONVERSATION DOCUMENTS ===
+The user has attached the following document(s) to this conversation:
+
+{document_context.strip()}
+
+DOCUMENT UNDERSTANDING INSTRUCTIONS:
+- You have direct, complete access to the attached document(s) shown above.
+- When the user asks you to summarize, analyze, explain, extract information, write code, or answer questions about these documents, thoroughly read and reference their contents.
+- Carefully fulfill the user's specific instructions and requirements while maintaining full continuity with the previous conversation history.
+- If the user refers to "the document", "the file", "the attachment", "it", or earlier topics discussed about these documents, use this document context and the conversation history to answer accurately.
+========================================="""
+
     msgs = history_messages or [HumanMessage(content=user_message)]
     yield from execute_with_capability_fallback(
         user_message=user_message,
         messages=msgs,
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=prompt,
         selected_model_key=selected_model_key
     )

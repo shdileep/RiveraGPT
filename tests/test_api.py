@@ -51,3 +51,16 @@ def test_stream_chat_validation(client):
     # Missing message
     res = client.post("/chat/stream", json={"message": "   "})
     assert res.status_code == 400
+
+
+def test_upload_document(client):
+    res = client.post(
+        "/upload",
+        files={"file": ("notes.txt", b"Summary of Q4 performance", "text/plain")},
+        data={"thread_id": "test_thread_upload"}
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["filename"] == "notes.txt"
+
