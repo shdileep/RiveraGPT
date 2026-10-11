@@ -9,6 +9,28 @@ if str(ROOT_DIR) not in sys.path:
 
 try:
     from app import app
+    from starlette.types import ASGIApp, Scope, Receive, Send
+
+    class VercelPathRewriteMiddleware:
+        def __init__(self, app: ASGIApp):
+            self.app = app
+
+        async def __call__(self, scope: Scope, receive: Receive, send: Send):
+            if scope.get("type") == "http":
+                raw_path = scope.get("path", "/")
+                # Strip Vercel rewrite prefix so /api/index.py maps to /
+                for prefix in ["/api/index.py", "/api"]:
+                    if raw_path == prefix:
+                        raw_path = "/"
+                        break
+                    elif raw_path.startswith(prefix + "/"):
+                        raw_path = raw_path[len(prefix):]
+                        break
+                scope["path"] = raw_path or "/"
+            await self.app(scope, receive, send)
+
+    app.add_middleware(VercelPathRewriteMiddleware)
+
 except Exception as e:
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse
