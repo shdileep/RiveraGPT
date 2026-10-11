@@ -1,7 +1,7 @@
+import os
 import math
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from langchain_tavily import TavilySearch
 from database import save_memory, search_memory
 from rag import retrieve_from_rag
 
@@ -17,11 +17,24 @@ def set_current_thread_id(thread_id: str):
     CURRENT_THREAD_ID = thread_id
 
 
-web_search = TavilySearch(
-    max_results=5,
-    topic="general",
-    search_depth="advanced"
-)  
+@tool
+def web_search(query: str) -> str:
+    """
+    Search the web for up-to-date information, current events, or web pages.
+    """
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
+        return "Web search is currently unavailable because TAVILY_API_KEY is not configured."
+    try:
+        from langchain_tavily import TavilySearch
+        tavily = TavilySearch(
+            max_results=5,
+            topic="general",
+            search_depth="advanced"
+        )
+        return str(tavily.invoke({"query": query}))
+    except Exception as e:
+        return f"Web search failed: {str(e)}"  
 
 
 @tool

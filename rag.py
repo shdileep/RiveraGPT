@@ -1,5 +1,3 @@
-from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.documents import Document
 from langchain_text_splitters.character import RecursiveCharacterTextSplitter
 
@@ -42,22 +40,40 @@ _vectorstore_instance = None
 def get_vectorstore():
     global _vectorstore_instance
     if _vectorstore_instance is None:
-        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-        embeddings = GoogleGenerativeAIEmbeddings(
-            model="gemini-embedding-001",
-            google_api_key=api_key
-        )
-        _vectorstore_instance = Chroma(
-            collection_name="agentic_chatbot_docs",
-            embedding_function=embeddings,
-            persist_directory=str(CHROMA_DIR)
-        )
+        try:
+            # Fix for older SQLite on Lambda/Vercel Linux
+            try:
+                __import__("pysqlite3")
+                import sys
+                sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+            except Exception:
+                pass
+
+            from langchain_chroma import Chroma
+            from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+            api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+            embeddings = GoogleGenerativeAIEmbeddings(
+                model="gemini-embedding-001",
+                google_api_key=api_key
+            )
+            _vectorstore_instance = Chroma(
+                collection_name="agentic_chatbot_docs",
+                embedding_function=embeddings,
+                persist_directory=str(CHROMA_DIR)
+            )
+        except Exception as e:
+            print(f"[RAG] Warning: Vector store failed to initialize: {e}")
+            return None
     return _vectorstore_instance
 
 
 class _LazyVectorstore:
     def __getattr__(self, name):
-        return getattr(get_vectorstore(), name)
+        vs = get_vectorstore()
+        if vs is None:
+            raise RuntimeError("Chroma vector store is not available in this environment.")
+        return getattr(vs, name)
 
 
 vectorstore = _LazyVectorstore()
@@ -113,7 +129,10 @@ def add_document_to_rag(file_path: str, thread_id: str):
         for chunk in chunks
     ]
 
-    vectorstore.add_documents(docs)
+    store = get_vectorstore()
+    if store is None:
+        raise ValueError("Chroma vector store is not available in this environment.")
+    store.add_documents(docs)
 
     return {
         "filename": Path(file_path).name,
@@ -125,11 +144,18 @@ def add_document_to_rag(file_path: str, thread_id: str):
 
 
 def retrieve_from_rag(query: str, thread_id: str, k: int = 4) -> str:
-    docs = vectorstore.similarity_search(
-        query,
-        k=k,
-        filter={"thread_id": thread_id}
-    )
+    store = get_vectorstore()
+    if store is None:
+        return "No relevant uploaded document content found (vector store not initialized)."
+
+    try:
+        docs = store.similarity_search(
+            query,
+            k=k,
+            filter={"thread_id": thread_id}
+        )
+    except Exception as e:
+        return f"Error retrieving document content: {str(e)}"
 
     if not docs:
         return "No relevant uploaded document content found."
