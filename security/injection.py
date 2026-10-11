@@ -4,7 +4,7 @@ from typing import Tuple
 PROMPT_INJECTION_PATTERNS = [
     # Direct System Prompt Extraction
     r'(?i)\b(?:show|reveal|print|display|dump|get|output|return|share)\s+(?:me\s+)?(?:your\s+)?(?:system\s+)?(?:prompt|instructions|rules|developer\s+instructions|hidden\s+prompt|guidelines)\b',
-    r'(?i)\bwhat\s+(?:are\s+)?your\s+(?:system\s+)?(?:instructions|prompt|rules|developer\s+instructions)\b',
+    r'(?i)\bwhat\s+(?:is|are)\s+(?:your\s+)?(?:system\s+)?(?:instructions|prompt|rules|developer\s+instructions)\b',
     r'(?i)\bignore\s+(?:all\s+)?previous\s+instructions\b',
     r'(?i)\bdump\s+(?:your\s+)?(?:configuration|config|env|environment|prompt)\b',
     r'(?i)\brepeat\s+(?:everything\s+)?(?:above|before|in\s+your\s+prompt)\b',

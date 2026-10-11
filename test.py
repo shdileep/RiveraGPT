@@ -1,7 +1,6 @@
 from agent import get_agent
 from langchain_core.messages import SystemMessage, HumanMessage
 from database import init_db
-from database import init_db
 
 init_db()
 
