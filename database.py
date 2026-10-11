@@ -1,23 +1,37 @@
+import os
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-Path("data").mkdir(exist_ok=True)
 
-DATABASE_URL = "sqlite:///data/chatbot_memory.db"
+def _get_data_dir() -> Path:
+    is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    base = Path("/tmp") if is_serverless else Path(__file__).resolve().parent
+    target = base / "data"
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        return target
+    except OSError:
+        tmp_target = Path("/tmp/rivera_data")
+        tmp_target.mkdir(parents=True, exist_ok=True)
+        return tmp_target
 
+
+DATA_DIR = _get_data_dir()
+db_file = DATA_DIR / "chatbot_memory.db"
+DATABASE_URL = os.getenv("DATABASE_URL") or f"sqlite:///{db_file.as_posix()}"
+
+engine_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args=engine_args
 )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
 
-
-from sqlalchemy import Boolean
 
 class Conversation(Base):
     __tablename__ = "conversations"

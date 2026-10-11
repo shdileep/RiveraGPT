@@ -19,18 +19,48 @@ os.environ["SSL_CERT_FILE"] = certifi.where()
 os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
 
-Path("uploads").mkdir(exist_ok=True)
-Path("chroma_db").mkdir(exist_ok=True)
+def _get_writable_dir(subdir: str) -> Path:
+    is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    base = Path("/tmp") if is_serverless else Path(__file__).resolve().parent
+    target = base / subdir
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        return target
+    except OSError:
+        tmp_target = Path("/tmp") / subdir
+        tmp_target.mkdir(parents=True, exist_ok=True)
+        return tmp_target
 
 
-# Embeddings model
-embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
+UPLOADS_DIR = _get_writable_dir("uploads")
+CHROMA_DIR = _get_writable_dir("chroma_db")
 
-vectorstore = Chroma(
-    collection_name="agentic_chatbot_docs",
-    embedding_function=embeddings,
-    persist_directory="chroma_db"
-)
+
+_vectorstore_instance = None
+
+
+def get_vectorstore():
+    global _vectorstore_instance
+    if _vectorstore_instance is None:
+        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        embeddings = GoogleGenerativeAIEmbeddings(
+            model="gemini-embedding-001",
+            google_api_key=api_key
+        )
+        _vectorstore_instance = Chroma(
+            collection_name="agentic_chatbot_docs",
+            embedding_function=embeddings,
+            persist_directory=str(CHROMA_DIR)
+        )
+    return _vectorstore_instance
+
+
+class _LazyVectorstore:
+    def __getattr__(self, name):
+        return getattr(get_vectorstore(), name)
+
+
+vectorstore = _LazyVectorstore()
 
 
 

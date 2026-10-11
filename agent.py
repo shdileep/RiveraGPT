@@ -19,7 +19,21 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from tools import tools
 from model_router import execute_with_capability_fallback
 
-Path("data").mkdir(exist_ok=True)
+
+def _get_data_dir() -> Path:
+    is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    base = Path("/tmp") if is_serverless else Path(__file__).resolve().parent
+    target = base / "data"
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        return target
+    except OSError:
+        tmp_target = Path("/tmp/rivera_data")
+        tmp_target.mkdir(parents=True, exist_ok=True)
+        return tmp_target
+
+
+DATA_DIR = _get_data_dir()
 
 DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
@@ -212,8 +226,9 @@ def build_agent(model_name: str):
     workflow.add_conditional_edges("chatbot", tools_condition)
     workflow.add_edge("tools", "chatbot")
 
+    checkpoint_file = DATA_DIR / "langgraph_checkpoints.sqlite"
     conn = sqlite3.connect(
-        "data/langgraph_checkpoints.sqlite",
+        str(checkpoint_file),
         check_same_thread=False
     )
     checkpointer = SqliteSaver(conn)

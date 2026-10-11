@@ -34,15 +34,31 @@ from model_registry import registry, health_tracker
 
 app = FastAPI(title="RiveraGPT Multi-Model Orchestrator")
 
-templates = Jinja2Templates(directory="templates")
-
-Path("uploads").mkdir(exist_ok=True)
-Path("data").mkdir(exist_ok=True)
-
-init_db()
-
-
 BASE_DIR = Path(__file__).resolve().parent
+
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+def _get_writable_dir(subdir: str) -> Path:
+    is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    base = Path("/tmp") if is_serverless else BASE_DIR
+    target = base / subdir
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        return target
+    except OSError:
+        tmp_target = Path("/tmp") / subdir
+        tmp_target.mkdir(parents=True, exist_ok=True)
+        return tmp_target
+
+
+UPLOADS_DIR = _get_writable_dir("uploads")
+DATA_DIR = _get_writable_dir("data")
+
+try:
+    init_db()
+except Exception:
+    pass
 
 
 @app.get("/chat.png")
@@ -160,13 +176,13 @@ async def upload_document(
 
         file_id = str(uuid.uuid4())
         safe_filename = filename.replace(" ", "_")
-        file_path = f"uploads/{file_id}_{safe_filename}"
+        target_path = UPLOADS_DIR / f"{file_id}_{safe_filename}"
 
-        with open(file_path, "wb") as f:
+        with open(target_path, "wb") as f:
             f.write(await file.read())
 
         create_or_update_conversation(thread_id, "Uploaded document")
-        result = add_document_to_rag(file_path=file_path, thread_id=thread_id)
+        result = add_document_to_rag(file_path=str(target_path), thread_id=thread_id)
 
         return JSONResponse({
             "success": True,

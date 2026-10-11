@@ -52,6 +52,24 @@ RiveraGPT/
 
 
 
+## Deployment
+
+### Vercel Deployment
+This repository is configured for Vercel deployment with `vercel.json` and `api/index.py`:
+1. Import your GitHub repository into [Vercel](https://vercel.com).
+2. Under **Project Settings > Environment Variables**, add your API keys:
+   - `GEMINI_API_KEY` or `GOOGLE_API_KEY` (Required for LLM and RAG embeddings)
+   - `TAVILY_API_KEY` (Optional, for web search tool)
+3. Deploy. All routes are proxied to `api/index.py` via FastAPI.
+
+*Note: In serverless environments, local storage falls back to `/tmp`.*
+
+### Container & Dedicated Server Deployment (Render / Railway / Docker)
+For production deployments where persistent storage and long-lived connections are preferred:
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+
 ## License
 
 This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+
