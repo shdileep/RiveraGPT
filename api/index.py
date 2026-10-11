@@ -12,16 +12,31 @@ try:
 
     async def app(scope, receive, send):
         if scope.get("type") == "http":
-            raw_path = scope.get("path", "/")
-            for prefix in ["/api/index.py", "/api"]:
-                if raw_path == prefix:
-                    raw_path = "/"
-                    break
-                elif raw_path.startswith(prefix + "/"):
-                    raw_path = raw_path[len(prefix):]
-                    break
-            scope["path"] = raw_path or "/"
-            scope["raw_path"] = (raw_path or "/").encode("ascii")
+            headers = dict(scope.get("headers", []))
+            # Vercel provides the original client path in x-matched-path or x-forwarded-uri
+            matched_header = headers.get(b"x-matched-path") or headers.get(b"x-forwarded-uri")
+            if matched_header:
+                try:
+                    real_path = matched_header.decode("utf-8")
+                    if "?" in real_path:
+                        real_path = real_path.split("?", 1)[0]
+                    if real_path and real_path != "/api/index.py":
+                        scope["path"] = real_path
+                        scope["raw_path"] = real_path.encode("ascii")
+                except Exception:
+                    pass
+            else:
+                raw_path = scope.get("path", "/")
+                for prefix in ["/api/index.py", "/api"]:
+                    if raw_path == prefix:
+                        raw_path = "/"
+                        break
+                    elif raw_path.startswith(prefix + "/"):
+                        raw_path = raw_path[len(prefix):]
+                        break
+                scope["path"] = raw_path or "/"
+                scope["raw_path"] = (raw_path or "/").encode("ascii")
+
         await fastapi_app(scope, receive, send)
 
 except Exception as e:

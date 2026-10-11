@@ -2,6 +2,10 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/chat.png",
+      "destination": "/chat.png"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api/index.py"
     }

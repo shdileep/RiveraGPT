@@ -32,7 +32,17 @@ from rag import add_document_to_rag
 from tools import set_current_thread_id
 from model_registry import registry, health_tracker
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="RiveraGPT Multi-Model Orchestrator")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -62,6 +72,7 @@ except Exception:
 
 
 @app.get("/chat.png")
+@app.get("/api/chat.png")
 @app.get("/api/index.py/chat.png")
 async def get_chat_icon():
     icon_path = BASE_DIR / "chat.png"
@@ -71,6 +82,7 @@ async def get_chat_icon():
 
 
 @app.get("/")
+@app.get("/api")
 @app.get("/api/index.py")
 async def home(request: Request):
     return templates.TemplateResponse(
@@ -81,6 +93,8 @@ async def home(request: Request):
 
 
 @app.get("/models")
+@app.get("/api/models")
+@app.get("/api/index.py/models")
 async def get_models():
     """
     Returns public RiveraGPT modes catalog.
@@ -90,6 +104,8 @@ async def get_models():
 
 
 @app.get("/health")
+@app.get("/api/health")
+@app.get("/api/index.py/health")
 async def health_status():
     """
     Returns real-time system status.
@@ -102,6 +118,8 @@ async def health_status():
 
 
 @app.get("/conversations")
+@app.get("/api/conversations")
+@app.get("/api/index.py/conversations")
 async def conversations():
     items = list_conversations()
     return {
@@ -119,12 +137,16 @@ async def conversations():
 
 
 @app.post("/conversations/{thread_id}/pin")
+@app.post("/api/conversations/{thread_id}/pin")
+@app.post("/api/index.py/conversations/{thread_id}/pin")
 async def pin_chat(thread_id: str):
     pinned = toggle_pin_conversation(thread_id)
     return {"success": True, "pinned": pinned}
 
 
 @app.put("/conversations/{thread_id}/rename")
+@app.put("/api/conversations/{thread_id}/rename")
+@app.put("/api/index.py/conversations/{thread_id}/rename")
 async def rename_chat(thread_id: str, request: Request):
     try:
         data = await request.json()
@@ -138,12 +160,16 @@ async def rename_chat(thread_id: str, request: Request):
 
 
 @app.delete("/conversations/{thread_id}")
+@app.delete("/api/conversations/{thread_id}")
+@app.delete("/api/index.py/conversations/{thread_id}")
 async def delete_chat(thread_id: str):
     success = delete_conversation(thread_id)
     return {"success": success}
 
 
 @app.get("/history/{thread_id}")
+@app.get("/api/history/{thread_id}")
+@app.get("/api/index.py/history/{thread_id}")
 async def history(thread_id: str):
     messages = get_chat_history(thread_id)
     return {
@@ -158,6 +184,8 @@ async def history(thread_id: str):
 
 
 @app.post("/upload")
+@app.post("/api/upload")
+@app.post("/api/index.py/upload")
 async def upload_document(
     file: UploadFile = File(...),
     thread_id: str = Form(...)
@@ -203,6 +231,8 @@ def sse_data(payload: dict) -> str:
 
 
 @app.post("/chat/stream")
+@app.post("/api/chat/stream")
+@app.post("/api/index.py/chat/stream")
 async def chat_stream(request: Request):
     try:
         data = await request.json()
