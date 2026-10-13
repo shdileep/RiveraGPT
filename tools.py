@@ -78,13 +78,13 @@ def get_weather(location: str) -> str:
                     f"- Humidity: {humidity}%\n"
                     f"- Wind: {wind_kph} km/h {wind_dir}\n"
                     f"- UV Index: {uv}"
-                    f"{forecast_summary}"
+                    f"{forecast_summary}\n\n*Provider: WeatherAPI*"
                 )
-        except Exception as e:
-            # Fall through to OpenWeatherMap
+        except Exception:
+            # Fall through to OpenWeatherMap or Open-Meteo
             pass
 
-    # 2. Try OpenWeatherMap (Fallback)
+    # 2. Try OpenWeatherMap (Secondary authenticated fallback)
     if owm_key and not owm_key.startswith("your_"):
         try:
             encoded_loc = urllib.parse.quote(cleaned_loc)
@@ -111,12 +111,78 @@ def get_weather(location: str) -> str:
                     f"- Temperature: {temp_c}°C ({temp_f}°F)\n"
                     f"- Feels Like: {feels_c}°C ({feels_f}°F)\n"
                     f"- Humidity: {humidity}%\n"
-                    f"- Wind Speed: {wind_spd} m/s"
+                    f"- Wind Speed: {wind_spd} m/s\n\n*Provider: OpenWeatherMap*"
                 )
-        except Exception as e:
-            return f"Could not retrieve weather for '{cleaned_loc}': {str(e)}"
+        except Exception:
+            pass
 
-    return f"Weather services are currently unconfigured or unavailable for '{cleaned_loc}'."
+    # 3. Open-Meteo (Tertiary Zero-Key Fallback — Free, Global, No Credentials Required)
+    try:
+        encoded_loc = urllib.parse.quote(cleaned_loc)
+        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={encoded_loc}&count=1&language=en"
+        geo_req = urllib.request.Request(geo_url, headers={"User-Agent": "RiveraGPT/2.0"})
+        with urllib.request.urlopen(geo_req, timeout=5.0) as resp:
+            geo_data = json.loads(resp.read().decode("utf-8"))
+            results = geo_data.get("results", [])
+            if results:
+                target = results[0]
+                lat = target.get("latitude")
+                lon = target.get("longitude")
+                name = target.get("name", cleaned_loc)
+                admin1 = target.get("admin1", "")
+                country = target.get("country", "")
+                full_place = ", ".join([p for p in [name, admin1, country] if p])
+
+                forecast_url = (
+                    f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+                    f"&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weather_code"
+                    f"&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto"
+                )
+                fc_req = urllib.request.Request(forecast_url, headers={"User-Agent": "RiveraGPT/2.0"})
+                with urllib.request.urlopen(fc_req, timeout=6.0) as fc_resp:
+                    fc_data = json.loads(fc_resp.read().decode("utf-8"))
+                    curr = fc_data.get("current", {})
+                    daily = fc_data.get("daily", {})
+
+                    wmo_codes = {
+                        0: "Clear sky ☀️", 1: "Mainly clear 🌤️", 2: "Partly cloudy ⛅", 3: "Overcast ☁️",
+                        45: "Foggy 🌫️", 48: "Depositing rime fog 🌫️",
+                        51: "Light drizzle 🌦️", 53: "Moderate drizzle 🌦️", 55: "Dense drizzle 🌧️",
+                        61: "Slight rain 🌧️", 63: "Moderate rain 🌧️", 65: "Heavy rain 🌧️",
+                        71: "Slight snow 🌨️", 73: "Moderate snow 🌨️", 75: "Heavy snow ❄️",
+                        80: "Rain showers 🌦️", 81: "Moderate rain showers 🌧️", 82: "Violent rain showers ⛈️",
+                        95: "Thunderstorm ⛈️", 96: "Thunderstorm with slight hail ⛈️", 99: "Thunderstorm with heavy hail ⛈️"
+                    }
+
+                    w_code = curr.get("weather_code", 0)
+                    condition = wmo_codes.get(w_code, "Fair 🌤️")
+                    temp_c = curr.get("temperature_2m", "N/A")
+                    temp_f = round(temp_c * 9/5 + 32, 1) if isinstance(temp_c, (int, float)) else "N/A"
+                    feels_c = curr.get("apparent_temperature", "N/A")
+                    feels_f = round(feels_c * 9/5 + 32, 1) if isinstance(feels_c, (int, float)) else "N/A"
+                    humidity = curr.get("relative_humidity_2m", "N/A")
+                    wind_kph = curr.get("wind_speed_10m", "N/A")
+
+                    forecast_summary = ""
+                    if daily.get("temperature_2m_max"):
+                        max_c = daily["temperature_2m_max"][0]
+                        min_c = daily["temperature_2m_min"][0]
+                        rain_chance = daily.get("precipitation_probability_max", [0])[0]
+                        forecast_summary = f"\n- Today's Forecast: High {max_c}°C / Low {min_c}°C | Rain probability: {rain_chance}%"
+
+                    return (
+                        f"### 🌦️ Current Weather for {full_place}\n"
+                        f"- Condition: {condition}\n"
+                        f"- Temperature: {temp_c}°C ({temp_f}°F)\n"
+                        f"- Feels Like: {feels_c}°C ({feels_f}°F)\n"
+                        f"- Humidity: {humidity}%\n"
+                        f"- Wind Speed: {wind_kph} km/h"
+                        f"{forecast_summary}\n\n*Provider: Open-Meteo (Zero-Key)*"
+                    )
+    except Exception as e:
+        return f"Could not retrieve weather for '{cleaned_loc}': {str(e)}"
+
+    return f"Weather services are currently unavailable for '{cleaned_loc}'. Please verify the spelling or try another city."
 
 
 # ==============================================================================
@@ -267,63 +333,125 @@ def get_directions_and_route(start_location: str, end_location: str, mode: str =
 # 4. JOB SEARCH TOOL (Powered by Adzuna)
 # ==============================================================================
 @tool
-def search_jobs(query: str, location: str = "", country: str = "us") -> str:
+def search_jobs(query: str, location: str = "", country: str = "us", experience_level: str = "") -> str:
     """
-    Search for open job listings, hiring companies, and salary estimates using Adzuna.
-    Example: search_jobs("Python Developer", "New York", "us")
+    Search for verified open job listings, hiring companies, and salary estimates using Adzuna.
+    Example: search_jobs("Python Developer", "New York", "us", "entry-level")
     """
+    clean_q = (query or "").strip()
+    clean_loc = (location or "").strip()
+
+    # Slot-filling guidance: check if role is generic or missing
+    generic_terms = ["job", "jobs", "internship", "internships", "hiring", "work", "career", "openings"]
+    if not clean_q or clean_q.lower() in generic_terms:
+        return (
+            "To find the best job listings for you, please let me know:\n"
+            "1. **Job Role** (e.g. *AI Engineer*, *Frontend Developer*, *Data Scientist*)\n"
+            "2. **Location** (e.g. *San Francisco*, *London*, *Hyderabad*, or *Remote*)\n"
+            "3. **Experience Level** (e.g. *Internship*, *Entry-Level*, *Mid-Level*, *Senior*)"
+        )
+
     app_key = os.getenv("ADZUNA_APP_KEY") or os.getenv("ADZUNA_API_KEY")
     app_id = os.getenv("ADZUNA_APP_ID")
 
     if not app_key or app_key.startswith("your_"):
-        return "Job search is unavailable because ADZUNA_APP_KEY is not configured."
+        return "Job search is unavailable because ADZUNA_APP_KEY is not configured in your settings."
 
     if not app_id or app_id.startswith("your_"):
+        loc_str = clean_loc if clean_loc else "Remote / Any"
+        exp_str = f" ({experience_level})" if experience_level else ""
         return (
-            f"Adzuna API key is active. To enable live job queries, please add your "
-            f"`ADZUNA_APP_ID` from developer.adzuna.com to your `.env` file.\n"
-            f"Searching query: '{query}' in '{location or 'all'}'."
+            f"### 💼 Job Search Setup Required\n"
+            f"Your Adzuna API Key is active. To enable live job queries, please add your **`ADZUNA_APP_ID`** from [developer.adzuna.com](https://developer.adzuna.com) in your Settings ⚙️ menu or `.env` file.\n\n"
+            f"- **Target Role**: {clean_q}{exp_str}\n"
+            f"- **Location**: {loc_str}\n\n"
+            f"*RiveraGPT adheres to strict factual verification standards and never fabricates simulated or fake job postings.*"
         )
 
     try:
-        clean_q = urllib.parse.quote(query.strip())
+        encoded_q = urllib.parse.quote(clean_q)
         country_code = country.strip().lower() or "us"
-        url = f"https://api.adzuna.com/v1/api/jobs/{country_code}/search/1?app_id={app_id}&app_key={app_key}&what={clean_q}&results_per_page=5"
-        if location.strip():
-            url += f"&where={urllib.parse.quote(location.strip())}"
+        url = f"https://api.adzuna.com/v1/api/jobs/{country_code}/search/1?app_id={app_id}&app_key={app_key}&what={encoded_q}&results_per_page=10"
+        if clean_loc:
+            url += f"&where={urllib.parse.quote(clean_loc)}"
 
         req = urllib.request.Request(url, headers={"User-Agent": "RiveraGPT/2.0"})
         with urllib.request.urlopen(req, timeout=7.0) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             results = data.get("results", [])
             if not results:
-                return f"No current job listings found for '{query}' in '{location or country_code}'."
+                return f"No verified job listings currently found for '{clean_q}' in '{clean_loc or country_code}'."
 
-            output = [f"### 💼 Job Openings for '{query}'"]
-            for idx, job in enumerate(results[:5], 1):
+            # Deduplicate by job URL or title+company
+            seen_keys = set()
+            unique_jobs = []
+            for job in results:
+                url_key = job.get("redirect_url")
+                title_key = (job.get("title", "").strip().lower(), job.get("company", {}).get("display_name", "").strip().lower())
+                if url_key and url_key in seen_keys:
+                    continue
+                if title_key in seen_keys:
+                    continue
+                if url_key:
+                    seen_keys.add(url_key)
+                seen_keys.add(title_key)
+                unique_jobs.append(job)
+                if len(unique_jobs) >= 5:
+                    break
+
+            loc_header = f" in {clean_loc}" if clean_loc else ""
+            output = [f"### 💼 Verified Job Openings for '{clean_q}'{loc_header}"]
+            for idx, job in enumerate(unique_jobs, 1):
                 title = job.get("title", "Untitled Position")
                 company = job.get("company", {}).get("display_name", "Confidential")
-                loc = job.get("location", {}).get("display_name", "Remote / Various")
+                loc = job.get("location", {}).get("display_name", clean_loc or "Remote / Various")
+                created = (job.get("created") or "")[:10]
                 salary_min = job.get("salary_min")
                 salary_max = job.get("salary_max")
                 salary_str = ""
                 if salary_min and salary_max:
-                    salary_str = f" | Salary: ${salary_min:,.0f} - ${salary_max:,.0f}"
+                    salary_str = f" | 💵 ${salary_min:,.0f} - ${salary_max:,.0f}/yr"
                 elif salary_min:
-                    salary_str = f" | Salary: from ${salary_min:,.0f}"
+                    salary_str = f" | 💵 From ${salary_min:,.0f}/yr"
 
+                date_str = f" | 📅 Posted {created}" if created else ""
                 link = job.get("redirect_url", "")
-                snippet = job.get("description", "")[:180] + "..."
-                output.append(f"{idx}. **{title}**\n   - *Company*: {company} ({loc}){salary_str}\n   - {snippet}\n   - [Apply / View Listing]({link})")
+                snippet = job.get("description", "")[:180].replace("\n", " ").strip() + "..."
+                output.append(
+                    f"{idx}. **{title}**\n"
+                    f"   - **Company**: {company} ({loc}){salary_str}{date_str}\n"
+                    f"   - {snippet}\n"
+                    f"   - [🔗 Apply / View Official Posting]({link})"
+                )
 
             return "\n\n".join(output)
 
     except Exception as e:
-        return f"Failed to search jobs: {str(e)}"
+        return f"Failed to search jobs via Adzuna: {str(e)}"
 
 
 # ==============================================================================
-# 5. WEB SEARCH (Tavily with GNews Fallback)
+# 5. IMAGE GENERATION TOOL (FLUX.1 Photorealistic AI)
+# ==============================================================================
+@tool
+def generate_ai_image(prompt: str) -> str:
+    """
+    Generate high-resolution photorealistic AI images, illustrations, logos, or visual concepts from a prompt.
+    Powered by FLUX.1 state-of-the-art diffusion engine.
+    Example: generate_ai_image("a futuristic agricultural water management system logo, minimalist vector")
+    """
+    try:
+        from image_service import generate_image
+        res = generate_image(prompt)
+        if res.get("success"):
+            return res.get("markdown", f"![{prompt}]({res.get('url')})")
+        return f"Image generation failed: {res.get('error', 'Unknown error')}"
+    except Exception as e:
+        return f"Image generation error: {str(e)}"
+
+
+# ==============================================================================
+# 6. WEB SEARCH (Tavily with GNews Fallback)
 # ==============================================================================
 @tool
 def web_search(query: str) -> str:
@@ -352,7 +480,7 @@ def web_search(query: str) -> str:
 
 
 # ==============================================================================
-# 6. MATHEMATICAL CALCULATOR
+# 7. MATHEMATICAL CALCULATOR
 # ==============================================================================
 @tool
 def calculator(expression: str) -> str:
@@ -388,7 +516,7 @@ def calculator(expression: str) -> str:
 
 
 # ==============================================================================
-# 7. DOCUMENT RAG & CONVERSATION MEMORY
+# 8. DOCUMENT RAG & CONVERSATION MEMORY
 # ==============================================================================
 @tool
 def search_uploaded_documents(query: str) -> str:
@@ -431,6 +559,7 @@ tools = [
     get_latest_news,
     get_directions_and_route,
     search_jobs,
+    generate_ai_image,
     calculator,
     search_uploaded_documents,
     remember_this,

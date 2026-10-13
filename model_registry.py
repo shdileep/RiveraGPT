@@ -131,6 +131,51 @@ STATIC_MODEL_CATALOG: Dict[str, Dict[str, Any]] = {
         "is_local": False,
         "cost_tier": "low"
     },
+    # OpenRouter Models (Multi-Provider Aggregator)
+    "openrouter/anthropic/claude-3.5-sonnet": {
+        "provider": "openrouter",
+        "model_id": "anthropic/claude-3.5-sonnet",
+        "display_name": "Claude 3.5 Sonnet (OpenRouter)",
+        "capabilities": ["chat", "reasoning", "coding", "vision"],
+        "context_window": 200000,
+        "speed_score": 88,
+        "quality_score": 98,
+        "is_local": False,
+        "cost_tier": "high"
+    },
+    "openrouter/openai/gpt-4o": {
+        "provider": "openrouter",
+        "model_id": "openai/gpt-4o",
+        "display_name": "GPT-4o (OpenRouter)",
+        "capabilities": ["chat", "reasoning", "coding", "vision"],
+        "context_window": 128000,
+        "speed_score": 89,
+        "quality_score": 96,
+        "is_local": False,
+        "cost_tier": "high"
+    },
+    "openrouter/deepseek/deepseek-r1": {
+        "provider": "openrouter",
+        "model_id": "deepseek/deepseek-r1",
+        "display_name": "DeepSeek R1 (OpenRouter)",
+        "capabilities": ["chat", "reasoning", "coding"],
+        "context_window": 131072,
+        "speed_score": 84,
+        "quality_score": 97,
+        "is_local": False,
+        "cost_tier": "low"
+    },
+    "openrouter/google/gemini-2.0-flash-001": {
+        "provider": "openrouter",
+        "model_id": "google/gemini-2.0-flash-001",
+        "display_name": "Gemini 2.0 Flash (OpenRouter)",
+        "capabilities": ["chat", "fast", "coding", "reasoning", "vision"],
+        "context_window": 1048576,
+        "speed_score": 94,
+        "quality_score": 91,
+        "is_local": False,
+        "cost_tier": "very_low"
+    },
 
     # Hugging Face Serverless Open-Source Models (Qwen, Llama, Gemma R3, DeepSeek)
     "huggingface/qwen-2.5-coder-32b": {
@@ -671,7 +716,7 @@ def normalize_parameters(
             "top_p": top_p,
             "max_output_tokens": max_tokens,
         }
-    elif provider in ["openai", "groq", "smallest", "sarvam", "vllm", "huggingface"]:
+    elif provider in ["openai", "openrouter", "groq", "smallest", "sarvam", "vllm", "huggingface"]:
         return {
             "temperature": temperature,
             "top_p": top_p,

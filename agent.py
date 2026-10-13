@@ -201,7 +201,11 @@ def build_agent(model_name: str):
     if "/" in selected_model:
         selected_model = selected_model.split("/")[-1]
     
-    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    api_key = (
+        os.getenv("GOOGLE_AI_STUDIO_API_KEY")
+        or os.getenv("GOOGLE_API_KEY")
+        or os.getenv("GEMINI_API_KEY")
+    )
 
     llm = ChatGoogleGenerativeAI(
         model=selected_model if selected_model != "auto" else "gemini-2.5-flash",

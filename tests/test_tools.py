@@ -79,5 +79,22 @@ def test_resolve_realtime_tools():
     assert c_res is not None
     assert "180" in c_res
 
+    # Image generation detection
+    img_res = resolve_realtime_tools("Generate an image of a futuristic neon city")
+    assert img_res is not None
+    assert "Generated Image" in img_res or "http" in img_res
+
+    # Job slot-filling test
+    job_prompt = search_jobs.invoke({"query": "jobs"})
+    assert "Job Role" in job_prompt and "Location" in job_prompt
+
     # Non-tool query should return None
     assert resolve_realtime_tools("Can you write a poem about the sea?") is None
+
+
+def test_image_generation_tool():
+    from tools import generate_ai_image
+    res = generate_ai_image.invoke({"prompt": "A modern minimalist logo for an AI startup"})
+    assert isinstance(res, str)
+    assert "Generated Image" in res or "http" in res
+

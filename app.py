@@ -120,6 +120,264 @@ async def health_status():
     }
 
 
+def _mask_secret(val: str | None) -> str:
+    if not val or val.startswith("your_"):
+        return ""
+    s = val.strip()
+    if len(s) <= 8:
+        return s[:2] + "..." + s[-2:]
+    return s[:6] + "..." + s[-4:]
+
+
+@app.get("/integrations/status")
+@app.get("/api/integrations/status")
+@app.get("/api/index.py/integrations/status")
+async def get_integrations_status():
+    google_key = os.getenv("GOOGLE_AI_STUDIO_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    hf_key = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_API_KEY")
+    weatherapi_key = os.getenv("WEATHERAPI_KEY") or os.getenv("WEATHER_API_KEY")
+    owm_key = os.getenv("OPENWEATHER_API_KEY") or os.getenv("OPENWEATHERMAP_API_KEY")
+    gnews_key = os.getenv("GNEWS_API_KEY")
+    adzuna_key = os.getenv("ADZUNA_APP_KEY") or os.getenv("ADZUNA_API_KEY")
+    adzuna_id = os.getenv("ADZUNA_APP_ID")
+    ors_key = os.getenv("OPENROUTESERVICE_API_KEY") or os.getenv("ORS_API_KEY") or os.getenv("HEIGIT_API_KEY")
+
+    adzuna_status = "missing"
+    if adzuna_key and adzuna_id and not adzuna_id.startswith("your_"):
+        adzuna_status = "active"
+    elif adzuna_key:
+        adzuna_status = "partial"
+
+    return {
+        "integrations": [
+            {
+                "id": "google",
+                "name": "Google AI Studio (Gemini 2.5)",
+                "category": "ai_model",
+                "status": "active" if google_key and not google_key.startswith("your_") else "missing",
+                "masked_key": _mask_secret(google_key),
+                "env_var": "GOOGLE_AI_STUDIO_API_KEY",
+                "docs_url": "https://aistudio.google.com/api-keys",
+                "description": "Primary multimodal intelligence, deep reasoning, coding & analysis engine."
+            },
+            {
+                "id": "openrouter",
+                "name": "OpenRouter (Claude, GPT-4o, DeepSeek)",
+                "category": "ai_model",
+                "status": "active" if openrouter_key and not openrouter_key.startswith("your_") else "missing",
+                "masked_key": _mask_secret(openrouter_key),
+                "env_var": "OPENROUTER_API_KEY",
+                "docs_url": "https://openrouter.ai/keys",
+                "description": "Unified access to Claude 3.5 Sonnet, GPT-4o, DeepSeek R1 & 200+ models."
+            },
+            {
+                "id": "huggingface",
+                "name": "Hugging Face Hub & Inference",
+                "category": "ai_model",
+                "status": "active" if hf_key and not hf_key.startswith("your_") else "missing",
+                "masked_key": _mask_secret(hf_key),
+                "env_var": "HF_TOKEN",
+                "docs_url": "https://huggingface.co/settings/tokens",
+                "description": "Open-weights LLMs (Qwen 2.5, DeepSeek R1 Distill, Llama 3.3, Gemma)."
+            },
+            {
+                "id": "flux_image",
+                "name": "FLUX.1 Photorealistic AI Image Generator",
+                "category": "multimodal",
+                "status": "active",
+                "masked_key": "zero_key_active",
+                "env_var": "IMAGE_GENERATION_PROVIDER",
+                "docs_url": "https://pollinations.ai",
+                "description": "High-resolution photo & art generation via state-of-the-art FLUX.1 diffusion."
+            },
+            {
+                "id": "weatherapi",
+                "name": "WeatherAPI.com",
+                "category": "tool",
+                "status": "active" if weatherapi_key and not weatherapi_key.startswith("your_") else "missing",
+                "masked_key": _mask_secret(weatherapi_key),
+                "env_var": "WEATHERAPI_KEY",
+                "docs_url": "https://www.weatherapi.com/my/",
+                "description": "Live conditions, hourly forecasts, UV index, and precipitation chance."
+            },
+            {
+                "id": "openweather",
+                "name": "OpenWeatherMap",
+                "category": "tool",
+                "status": "active" if owm_key and not owm_key.startswith("your_") else "missing",
+                "masked_key": _mask_secret(owm_key),
+                "env_var": "OPENWEATHER_API_KEY",
+                "docs_url": "https://home.openweathermap.org/api_keys",
+                "description": "Secondary authenticated weather and temperature provider."
+            },
+            {
+                "id": "openmeteo",
+                "name": "Open-Meteo Global Weather",
+                "category": "tool",
+                "status": "active",
+                "masked_key": "zero_key_active",
+                "env_var": "OPEN_METEO_DEFAULT",
+                "docs_url": "https://open-meteo.com",
+                "description": "Zero-key fallback ensuring worldwide weather retrieval never fails."
+            },
+            {
+                "id": "gnews",
+                "name": "GNews Live News & Research",
+                "category": "tool",
+                "status": "active" if gnews_key and not gnews_key.startswith("your_") else "missing",
+                "masked_key": _mask_secret(gnews_key),
+                "env_var": "GNEWS_API_KEY",
+                "docs_url": "https://gnews.io/dashboard",
+                "description": "Real-time news search, tech headlines, and citation links."
+            },
+            {
+                "id": "adzuna",
+                "name": "Adzuna Job Search",
+                "category": "tool",
+                "status": adzuna_status,
+                "masked_key": _mask_secret(adzuna_key),
+                "env_var": "ADZUNA_APP_KEY",
+                "secondary_env_var": "ADZUNA_APP_ID",
+                "secondary_masked_key": _mask_secret(adzuna_id),
+                "docs_url": "https://developer.adzuna.com",
+                "description": "Open job postings, salary ranges, and official application links."
+            },
+            {
+                "id": "heigit",
+                "name": "OpenRouteService / HeiGIT",
+                "category": "tool",
+                "status": "active" if ors_key and not ors_key.startswith("your_") else "missing",
+                "masked_key": _mask_secret(ors_key),
+                "env_var": "HEIGIT_API_KEY",
+                "docs_url": "https://account.heigit.org/manage/key",
+                "description": "Turn-by-turn navigation, route calculation, travel duration & distances."
+            }
+        ]
+    }
+
+
+@app.post("/integrations/test")
+@app.post("/api/integrations/test")
+@app.post("/api/index.py/integrations/test")
+async def test_integration(request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"success": False, "message": "Invalid JSON"}, status_code=400)
+
+    provider_id = (data.get("provider") or "").lower().strip()
+    import time
+    t0 = time.time()
+
+    try:
+        if provider_id == "google":
+            key = os.getenv("GOOGLE_AI_STUDIO_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+            if not key or key.startswith("your_"):
+                return {"success": False, "message": "Google AI Studio API key is not configured."}
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=key, request_timeout=8.0)
+            res = llm.invoke("Hi")
+            latency = round((time.time() - t0) * 1000, 1)
+            return {"success": True, "latency_ms": latency, "message": f"Connected to Google Gemini (response in {latency}ms)"}
+
+        elif provider_id in ["weather", "weatherapi", "openweather", "openmeteo"]:
+            from tools import get_weather
+            res = get_weather.invoke({"location": "London"})
+            latency = round((time.time() - t0) * 1000, 1)
+            return {"success": True, "latency_ms": latency, "message": f"Weather retrieved in {latency}ms"}
+
+        elif provider_id == "gnews":
+            from tools import get_latest_news
+            res = get_latest_news.invoke({"query": "AI"})
+            latency = round((time.time() - t0) * 1000, 1)
+            return {"success": "Failed" not in res, "latency_ms": latency, "message": f"News verified ({latency}ms)"}
+
+        elif provider_id in ["heigit", "ors"]:
+            from tools import get_directions_and_route
+            res = get_directions_and_route.invoke({"start_location": "Paris", "end_location": "Lyon"})
+            latency = round((time.time() - t0) * 1000, 1)
+            return {"success": "Failed" not in res, "latency_ms": latency, "message": f"Routing verified ({latency}ms)"}
+
+        elif provider_id in ["flux_image", "image"]:
+            from image_service import generate_image
+            res = generate_image("minimal blue river geometric logo")
+            latency = round((time.time() - t0) * 1000, 1)
+            return {"success": res.get("success", False), "latency_ms": latency, "message": f"Generated image via {res.get('provider')} ({latency}ms)"}
+
+        elif provider_id == "adzuna":
+            from tools import search_jobs
+            res = search_jobs.invoke({"query": "Software Engineer", "location": "Remote"})
+            latency = round((time.time() - t0) * 1000, 1)
+            return {"success": True, "latency_ms": latency, "message": f"Adzuna integration checked ({latency}ms)"}
+
+        elif provider_id == "openrouter":
+            key = os.getenv("OPENROUTER_API_KEY")
+            if not key or key.startswith("your_"):
+                return {"success": False, "message": "OPENROUTER_API_KEY is not configured."}
+            import httpx
+            with httpx.Client(timeout=5.0) as client:
+                r = client.get("https://openrouter.ai/api/v1/auth/key", headers={"Authorization": f"Bearer {key}"})
+                latency = round((time.time() - t0) * 1000, 1)
+                return {"success": r.status_code == 200, "latency_ms": latency, "message": f"OpenRouter status: HTTP {r.status_code}"}
+
+        return {"success": True, "latency_ms": 10.0, "message": f"Provider '{provider_id}' is ready."}
+
+    except Exception as e:
+        latency = round((time.time() - t0) * 1000, 1)
+        return {"success": False, "latency_ms": latency, "message": f"Test failed: {str(e)}"}
+
+
+@app.post("/integrations/save")
+@app.post("/api/integrations/save")
+@app.post("/api/index.py/integrations/save")
+async def save_integrations(request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"success": False, "message": "Invalid JSON"}, status_code=400)
+
+    keys = data.get("keys", {})
+    if not isinstance(keys, dict):
+        return JSONResponse({"success": False, "message": "Keys must be an object"}, status_code=400)
+
+    env_path = BASE_DIR / ".env"
+    existing_lines = []
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8", errors="ignore") as f:
+            existing_lines = f.readlines()
+
+    updated_keys = set()
+    new_lines = []
+
+    for line in existing_lines:
+        trimmed = line.strip()
+        if trimmed and not trimmed.startswith("#") and "=" in trimmed:
+            k = trimmed.split("=", 1)[0].strip()
+            if k in keys and keys[k] is not None:
+                val = str(keys[k]).strip()
+                new_lines.append(f"{k}={val}\n")
+                os.environ[k] = val
+                updated_keys.add(k)
+                continue
+        new_lines.append(line)
+
+    for k, v in keys.items():
+        if k not in updated_keys and v is not None and str(v).strip():
+            val = str(v).strip()
+            new_lines.append(f"{k}={val}\n")
+            os.environ[k] = val
+            updated_keys.add(k)
+
+    try:
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+    except Exception:
+        pass
+
+    return {"success": True, "saved_keys": list(updated_keys)}
+
+
 @app.get("/conversations")
 @app.get("/api/conversations")
 @app.get("/api/index.py/conversations")

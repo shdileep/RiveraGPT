@@ -749,6 +749,192 @@
             color: #fff;
         }
 
+        .settings-btn {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-glow);
+            color: var(--text-main);
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .settings-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent-violet);
+            transform: translateY(-1px);
+        }
+
+        .integrations-modal-card {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-glow);
+            border-radius: 18px;
+            padding: 24px;
+            width: 94%;
+            max-width: 720px;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+            animation: modalFadeIn 0.18s ease-out;
+            color: var(--text-main);
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-dark);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .modal-tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .modal-tab-btn:hover {
+            color: var(--text-main);
+            background: var(--surface-hover);
+        }
+
+        .modal-tab-btn.active {
+            background: rgba(140, 104, 252, 0.15);
+            border-color: rgba(140, 104, 252, 0.4);
+            color: var(--accent-violet);
+        }
+
+        .integrations-list {
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 4px;
+        }
+
+        .integration-row {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-dark);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.15s ease;
+        }
+
+        .integration-row:hover {
+            border-color: var(--border-glow);
+        }
+
+        .integration-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .integration-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .integration-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge.partial {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-badge.missing {
+            background: rgba(142, 153, 176, 0.15);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-dark);
+        }
+
+        .integration-desc {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .integration-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .key-input {
+            flex: 1;
+            background: var(--surface-dark);
+            border: 1px solid var(--border-dark);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 7px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .key-input:focus {
+            border-color: var(--accent-violet);
+        }
+
+        .action-sm-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-dark);
+            background: var(--surface-hover);
+            color: var(--text-main);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .action-sm-btn:hover {
+            border-color: var(--accent-violet);
+        }
+
+        .action-sm-btn.primary {
+            background: var(--gradient-primary);
+            border: none;
+            color: #fff;
+        }
+
         @media(max-width: 768px) {
             .sidebar { display: none; }
             .input-dock { left: 0; }
@@ -766,6 +952,78 @@
         <div class="modal-title" id="modalTitle">Title</div>
         <div id="modalBody"></div>
         <div class="modal-actions" id="modalActions"></div>
+    </div>
+</div>
+
+<!-- RiveraGPT Integrations & Settings Modal -->
+<div class="modal-overlay" id="integrationsModalOverlay" onclick="if(event.target===this) closeIntegrationsModal()">
+    <div class="integrations-modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:22px;">⚙️</span>
+                <div>
+                    <div style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700;">Integrations & API Settings</div>
+                    <div style="font-size:12px; color:var(--text-secondary);">Manage model providers, tools, credentials & Vercel deployment</div>
+                </div>
+            </div>
+            <button class="action-sm-btn" onclick="closeIntegrationsModal()" style="padding:4px 10px; font-size:16px;">✕</button>
+        </div>
+
+        <div class="modal-tabs">
+            <button class="modal-tab-btn active" id="tabBtnProviders" onclick="switchIntegrationsTab('providers')">⚡ Active Providers & Tools</button>
+            <button class="modal-tab-btn" id="tabBtnVercel" onclick="switchIntegrationsTab('vercel')">▲ Vercel Deployment Setup</button>
+        </div>
+
+        <!-- Tab 1: Providers & Tools -->
+        <div id="integrationsTabProviders" class="integrations-list">
+            <div id="integrationsLoading" style="text-align:center; padding:30px; color:var(--text-secondary);">
+                Loading integration statuses...
+            </div>
+            <div id="integrationsContainer" style="display:none; display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+
+        <!-- Tab 2: Vercel Deployment -->
+        <div id="integrationsTabVercel" style="display:none; overflow-y:auto; flex:1; padding-right:4px;">
+            <div style="background:var(--bg-dark); border:1px solid var(--border-dark); border-radius:12px; padding:16px; margin-bottom:12px;">
+                <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--accent-cyan); display:flex; align-items:center; gap:8px;">
+                    ▲ Deploying to Vercel (Production Ready)
+                </div>
+                <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5;">
+                    RiveraGPT runs seamlessly on Vercel Python Serverless. To activate all multimodal features, AI models, weather, news, and job retrieval on your Vercel deployment:
+                    <ol style="margin:8px 0 8px 18px; padding:0;">
+                        <li>Go to your <strong>Vercel Project Dashboard</strong> ➔ <strong>Settings</strong> ➔ <strong>Environment Variables</strong>.</li>
+                        <li>Click <strong>"Copy All for Vercel"</strong> below.</li>
+                        <li>Paste them into Vercel and re-deploy.</li>
+                    </ol>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+                    <button class="action-sm-btn primary" onclick="copyVercelEnv(this)">
+                        📋 Copy All for Vercel
+                    </button>
+                    <span id="copyVercelMsg" style="font-size:12px; color:var(--accent-green); display:none;">Copied to clipboard!</span>
+                </div>
+            </div>
+
+            <div style="background:var(--code-bg); border:1px solid var(--border-dark); border-radius:10px; padding:12px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-secondary); max-height:220px; overflow-y:auto;" id="vercelEnvPreview">
+# RiveraGPT Vercel Production Environment
+GOOGLE_AI_STUDIO_API_KEY=...
+OPENROUTER_API_KEY=...
+HF_TOKEN=...
+WEATHERAPI_KEY=...
+OPENWEATHER_API_KEY=...
+GNEWS_API_KEY=...
+ADZUNA_APP_ID=...
+ADZUNA_APP_KEY=...
+HEIGIT_API_KEY=...
+            </div>
+        </div>
+
+        <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-dark); display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:11.5px; color:var(--text-muted);">
+                🔒 Keys are encrypted and redacted automatically via Security Guardrails.
+            </div>
+            <button class="action-sm-btn primary" onclick="closeIntegrationsModal()">Done</button>
+        </div>
     </div>
 </div>
 
@@ -791,11 +1049,21 @@
         <div class="nav-title">
             <img src="/chat.png" alt="RiveraGPT" style="width:24px; height:24px; border-radius:6px; vertical-align:middle;">
             RiveraGPT
+            <span style="font-size:11px; padding:2px 8px; border-radius:12px; background:rgba(16,185,129,0.15); color:var(--accent-green); border:1px solid rgba(16,185,129,0.3); font-weight:600; margin-left:6px;">Multi-Modal Pro</span>
         </div>
 
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
-            🌙
-        </button>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="settings-btn" id="openSettingsBtn" onclick="openIntegrationsModal()" title="Integrations & API Settings">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span>Integrations</span>
+            </button>
+            <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
+                🌙
+            </button>
+        </div>
     </div>
 
     <div class="chat-viewport" id="chatViewport">
@@ -844,6 +1112,14 @@
                     Reasoning & Coding
                 </div>
                 <div class="action-card-desc">Step-by-step problem solving & code generation</div>
+            </div>
+
+            <div class="action-card" onclick="setInput('Generate an image of a futuristic floating hydroponic greenhouse city at sunset, 8k resolution')">
+                <div class="action-card-title">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                    AI Image Generation
+                </div>
+                <div class="action-card-desc">Photorealistic art, logos & concepts (FLUX.1)</div>
             </div>
 
             <div class="action-card" onclick="setInput('నమస్కారం! AI టెక్నాలజీ గురించి వివరించండి')">
@@ -1237,6 +1513,12 @@
         html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
         html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
 
+        // Markdown Images: ![alt](url)
+        html = html.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s\)]+)\)/g, '<div style="margin:12px 0;"><img src="$2" alt="$1" loading="lazy" style="max-width:100%; max-height:500px; border-radius:14px; border:1px solid var(--border-glow); display:block; box-shadow:0 8px 30px rgba(0,0,0,0.35);"><div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">🎨 $1</div></div>');
+
+        // Markdown Links: [text](url)
+        html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--accent-cyan); text-decoration:underline;">$1</a>');
+
         // Bold
         html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
@@ -1476,6 +1758,212 @@
             }
             isGenerating = false;
             loadConversations();
+        }
+    }
+
+    // ==========================================
+    // INTEGRATIONS & SETTINGS MODAL LOGIC
+    // ==========================================
+    let cachedIntegrations = [];
+
+    function openIntegrationsModal() {
+        const overlay = document.getElementById("integrationsModalOverlay");
+        overlay.style.display = "flex";
+        loadIntegrations();
+    }
+
+    function closeIntegrationsModal() {
+        const overlay = document.getElementById("integrationsModalOverlay");
+        overlay.style.display = "none";
+    }
+
+    function switchIntegrationsTab(tab) {
+        const tabBtnP = document.getElementById("tabBtnProviders");
+        const tabBtnV = document.getElementById("tabBtnVercel");
+        const tabP = document.getElementById("integrationsTabProviders");
+        const tabV = document.getElementById("integrationsTabVercel");
+
+        if (tab === "vercel") {
+            tabBtnP.classList.remove("active");
+            tabBtnV.classList.add("active");
+            tabP.style.display = "none";
+            tabV.style.display = "block";
+            updateVercelEnvPreview();
+        } else {
+            tabBtnV.classList.remove("active");
+            tabBtnP.classList.add("active");
+            tabV.style.display = "none";
+            tabP.style.display = "flex";
+        }
+    }
+
+    async function loadIntegrations() {
+        const loading = document.getElementById("integrationsLoading");
+        const container = document.getElementById("integrationsContainer");
+        loading.style.display = "block";
+        container.style.display = "none";
+
+        try {
+            const res = await fetch("/api/integrations/status");
+            const data = await res.json();
+            cachedIntegrations = data.integrations || [];
+            renderIntegrationsList(cachedIntegrations);
+            updateVercelEnvPreview();
+        } catch (e) {
+            loading.innerHTML = `<span style="color:var(--accent-rose)">Failed to load integrations: ${e.message}</span>`;
+        }
+    }
+
+    function renderIntegrationsList(integrations) {
+        const loading = document.getElementById("integrationsLoading");
+        const container = document.getElementById("integrationsContainer");
+        container.innerHTML = "";
+
+        integrations.forEach(item => {
+            const row = document.createElement("div");
+            row.className = "integration-row";
+
+            let badgeHtml = "";
+            if (item.status === "active") {
+                badgeHtml = `<span class="status-badge active">● Active</span>`;
+            } else if (item.status === "partial") {
+                badgeHtml = `<span class="status-badge partial">▲ Setup Needed</span>`;
+            } else {
+                badgeHtml = `<span class="status-badge missing">○ Not Configured</span>`;
+            }
+
+            const inputId = `key_input_${item.id}`;
+            const secondaryInputId = item.secondary_env_var ? `sec_input_${item.id}` : null;
+            const testBtnId = `test_btn_${item.id}`;
+            const statusMsgId = `status_msg_${item.id}`;
+
+            let inputsHtml = "";
+            if (item.masked_key === "zero_key_active") {
+                inputsHtml = `
+                    <div style="font-size:12px; color:var(--accent-green); display:flex; align-items:center; gap:6px;">
+                        <span>✓ Ready (Zero API key required)</span>
+                    </div>
+                `;
+            } else {
+                inputsHtml = `
+                    <div class="integration-input-group">
+                        <input type="text" id="${inputId}" class="key-input" placeholder="${item.masked_key ? item.masked_key : 'Enter ' + item.env_var + '...'}" value="">
+                        <button class="action-sm-btn" onclick="saveSingleKey('${item.env_var}', '${inputId}', '${statusMsgId}')">Save</button>
+                        <button class="action-sm-btn" id="${testBtnId}" onclick="testSingleIntegration('${item.id}', '${testBtnId}', '${statusMsgId}')">Test</button>
+                    </div>
+                `;
+                if (item.secondary_env_var) {
+                    inputsHtml += `
+                        <div class="integration-input-group" style="margin-top:6px;">
+                            <input type="text" id="${secondaryInputId}" class="key-input" placeholder="${item.secondary_masked_key ? item.secondary_masked_key : 'Enter ' + item.secondary_env_var + '...'}" value="">
+                            <button class="action-sm-btn" onclick="saveSingleKey('${item.secondary_env_var}', '${secondaryInputId}', '${statusMsgId}')">Save ${item.secondary_env_var}</button>
+                        </div>
+                    `;
+                }
+            }
+
+            row.innerHTML = `
+                <div class="integration-header">
+                    <div class="integration-title-group">
+                        <span class="integration-name">${item.name}</span>
+                        ${badgeHtml}
+                    </div>
+                    <a href="${item.docs_url}" target="_blank" style="font-size:11.5px; color:var(--accent-cyan); text-decoration:none;">Docs ↗</a>
+                </div>
+                <div class="integration-desc">${item.description}</div>
+                ${inputsHtml}
+                <div id="${statusMsgId}" style="font-size:11.5px; margin-top:2px; min-height:14px;"></div>
+            `;
+            container.appendChild(row);
+        });
+
+        loading.style.display = "none";
+        container.style.display = "flex";
+    }
+
+    async function saveSingleKey(envVar, inputId, msgId) {
+        const input = document.getElementById(inputId);
+        const msg = document.getElementById(msgId);
+        const val = (input.value || "").trim();
+        if (!val) {
+            msg.innerHTML = `<span style="color:var(--accent-rose)">Please enter a valid key first.</span>`;
+            return;
+        }
+
+        msg.innerHTML = `<span style="color:var(--text-secondary)">Saving...</span>`;
+        try {
+            const res = await fetch("/api/integrations/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ keys: { [envVar]: val } })
+            });
+            const data = await res.json();
+            if (data.success) {
+                msg.innerHTML = `<span style="color:var(--accent-green)">✓ Saved successfully!</span>`;
+                input.value = "";
+                setTimeout(loadIntegrations, 800);
+            } else {
+                msg.innerHTML = `<span style="color:var(--accent-rose)">Failed: ${data.message}</span>`;
+            }
+        } catch (e) {
+            msg.innerHTML = `<span style="color:var(--accent-rose)">Error: ${e.message}</span>`;
+        }
+    }
+
+    async function testSingleIntegration(providerId, btnId, msgId) {
+        const btn = document.getElementById(btnId);
+        const msg = document.getElementById(msgId);
+        const origText = btn.innerText;
+        btn.innerText = "...";
+        btn.disabled = true;
+        msg.innerHTML = `<span style="color:var(--text-secondary)">Testing connectivity...</span>`;
+
+        try {
+            const res = await fetch("/api/integrations/test", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider: providerId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                msg.innerHTML = `<span style="color:var(--accent-green)">✓ ${data.message}</span>`;
+            } else {
+                msg.innerHTML = `<span style="color:var(--accent-rose)">✕ ${data.message}</span>`;
+            }
+        } catch (e) {
+            msg.innerHTML = `<span style="color:var(--accent-rose)">✕ Request failed: ${e.message}</span>`;
+        } finally {
+            btn.innerText = origText;
+            btn.disabled = false;
+        }
+    }
+
+    function updateVercelEnvPreview() {
+        const preview = document.getElementById("vercelEnvPreview");
+        let lines = ["# RiveraGPT Production Environment Variables for Vercel"];
+        cachedIntegrations.forEach(item => {
+            if (item.env_var && item.env_var !== "OPEN_METEO_DEFAULT" && item.env_var !== "IMAGE_GENERATION_PROVIDER") {
+                const val = item.masked_key && item.masked_key !== "zero_key_active" ? item.masked_key : "";
+                lines.push(`${item.env_var}=${val || 'your_' + item.env_var.toLowerCase()}`);
+            }
+            if (item.secondary_env_var) {
+                const val2 = item.secondary_masked_key || "";
+                lines.push(`${item.secondary_env_var}=${val2 || 'your_' + item.secondary_env_var.toLowerCase()}`);
+            }
+        });
+        lines.push("GEMINI_MODEL=gemini-2.5-flash");
+        preview.textContent = lines.join("\n");
+    }
+
+    async function copyVercelEnv(btn) {
+        const preview = document.getElementById("vercelEnvPreview");
+        const msg = document.getElementById("copyVercelMsg");
+        try {
+            await navigator.clipboard.writeText(preview.textContent);
+            msg.style.display = "inline";
+            setTimeout(() => { msg.style.display = "none"; }, 2500);
+        } catch (e) {
+            alert("Copied preview text to clipboard!");
         }
     }
 

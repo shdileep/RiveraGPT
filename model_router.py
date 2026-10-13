@@ -72,6 +72,27 @@ def resolve_realtime_tools(user_message: str) -> Optional[str]:
     msg = user_message.strip()
     m_lower = msg.lower()
 
+    # 0. Image Generation (FLUX.1 Photorealistic AI)
+    img_intent = any(k in m_lower for k in [
+        "generate an image", "create an image", "generate image", "create image",
+        "generate a picture", "draw a picture", "draw an image", "draw me",
+        "generate logo", "design a logo", "create a logo", "make a picture",
+        "generate visual", "generate artwork", "create illustration"
+    ])
+    if img_intent:
+        clean_prompt = re.sub(
+            r'(?i)^(can you\s+)?(please\s+)?(generate|create|make|draw|design)\s+(an?\s+)?(image|picture|photo|illustration|logo|visual|artwork)\s+(of|for|about)?\s*',
+            '',
+            msg
+        ).strip(' ?.')
+        if not clean_prompt:
+            clean_prompt = msg
+        try:
+            from tools import generate_ai_image
+            return generate_ai_image.invoke({"prompt": clean_prompt})
+        except Exception as e:
+            logger.warning(f"Image generation tool error: {e}")
+
     # 1. Directions & Navigation Routing (OpenRouteService / HeiGIT)
     dir_match = re.search(
         r'(?:directions|route|drive|travel|how\s+to\s+get)\s+(?:from\s+)?([a-zA-Z0-9\s,.-]+?)\s+to\s+([a-zA-Z0-9\s,.-]+)',
@@ -107,7 +128,7 @@ def resolve_realtime_tools(user_message: str) -> Optional[str]:
             except Exception as e:
                 logger.warning(f"Directions tool error: {e}")
 
-    # 2. Real-time Weather (WeatherAPI / OpenWeatherMap)
+    # 2. Real-time Weather (WeatherAPI / OpenWeatherMap / Open-Meteo)
     if any(k in m_lower for k in ["weather", "temperature", "forecast", "climate", "is it raining"]):
         w_match = re.search(r'(?:weather|forecast|temperature|climate)\s+(?:in|for|at|of)\s+([a-zA-Z\s,.-]+)', msg, re.I)
         if not w_match:
@@ -126,6 +147,8 @@ def resolve_realtime_tools(user_message: str) -> Optional[str]:
                 return get_weather.invoke({"location": loc})
             except Exception as e:
                 logger.warning(f"Weather tool error: {e}")
+        else:
+            return "Please provide the city, district, state, or coordinates you'd like to check the weather for (e.g. 'London', 'Tokyo', or 'Hyderabad')."
 
     # 3. Breaking & Live News (GNews API)
     if any(k in m_lower for k in ["latest news", "breaking news", "news about", "news on", "top news", "news today", "news headlines", "headlines today"]):
@@ -150,14 +173,19 @@ def resolve_realtime_tools(user_message: str) -> Optional[str]:
         except Exception as e:
             logger.warning(f"News tool error: {e}")
 
-    # 4. Job Search (Adzuna)
-    if any(k in m_lower for k in ["jobs in", "job in", "hiring in", "jobs for", "openings in", "openings for"]):
-        job_match = re.search(r'(?:jobs|openings|hiring)\s+(?:for|in)?\s*([a-zA-Z0-9\s#+]+?)(?:\s+in\s+([a-zA-Z\s,.-]+))?$', msg, re.I)
-        role = "Software Developer"
+    # 4. Job Search & Slot-filling (Adzuna)
+    if any(k in m_lower for k in ["job", "jobs", "internship", "internships", "hiring", "openings", "vacancies", "careers"]):
+        job_match = re.search(r'(?:jobs|openings|hiring|internships)\s+(?:for|in)?\s*([a-zA-Z0-9\s#+.-]+?)(?:\s+in\s+([a-zA-Z\s,.-]+))?$', msg, re.I)
+        role = ""
         loc = ""
         if job_match:
-            role = job_match.group(1).strip()
+            role = (job_match.group(1) or "").strip()
             loc = (job_match.group(2) or "").strip()
+        if not role:
+            r_match = re.search(r'([a-zA-Z0-9\s#+.-]+?)\s+(?:jobs|openings|internships)', msg, re.I)
+            if r_match:
+                role = r_match.group(1).strip()
+
         try:
             from tools import search_jobs
             return search_jobs.invoke({"query": role, "location": loc})
@@ -200,7 +228,12 @@ def get_ranked_fallback_chain(selected_model_key: str, intent: str) -> List[str]
         effective_intent = "INDIC_LANGUAGE"
 
     # Priority model allocation based on effective intent & available providers
-    has_google = bool(os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"))
+    has_google = bool(
+        os.getenv("GOOGLE_AI_STUDIO_API_KEY")
+        or os.getenv("GOOGLE_API_KEY")
+        or os.getenv("GEMINI_API_KEY")
+    )
+    has_openrouter = bool(os.getenv("OPENROUTER_API_KEY"))
     has_hf = bool(
         os.getenv("HUGGINGFACE_API_KEY")
         or os.getenv("HF_TOKEN")
@@ -424,7 +457,11 @@ def execute_single_provider_stream(
 
     # --- 1. Google Gemini Provider ---
     if provider == "google":
-        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        api_key = (
+            os.getenv("GOOGLE_AI_STUDIO_API_KEY")
+            or os.getenv("GOOGLE_API_KEY")
+            or os.getenv("GEMINI_API_KEY")
+        )
         if not api_key or api_key.startswith("your_"):
             raise ValueError("Google API key is missing or not configured.")
 
@@ -445,11 +482,19 @@ def execute_single_provider_stream(
                     "token": sanitized_token
                 }
 
-    # --- 2. OpenAI / Groq / Smallest AI / Sarvam / vLLM / Hugging Face OpenAI-Compatible Providers ---
-    elif provider in ["openai", "groq", "smallest", "sarvam", "vllm", "huggingface"]:
+    # --- 2. OpenAI / OpenRouter / Groq / Smallest AI / Sarvam / vLLM / Hugging Face Providers ---
+    elif provider in ["openai", "openrouter", "groq", "smallest", "sarvam", "vllm", "huggingface"]:
+        extra_headers = {}
         if provider == "openai":
             api_key = os.getenv("OPENAI_API_KEY")
             base_url = None
+        elif provider == "openrouter":
+            api_key = os.getenv("OPENROUTER_API_KEY")
+            base_url = "https://openrouter.ai/api/v1"
+            extra_headers = {
+                "HTTP-Referer": "https://riveragpt.vercel.app",
+                "X-Title": "RiveraGPT"
+            }
         elif provider == "huggingface":
             api_key = (
                 os.getenv("HUGGINGFACE_API_KEY")
@@ -488,6 +533,8 @@ def execute_single_provider_stream(
                 }
                 if base_url:
                     kwargs["base_url"] = base_url
+                if extra_headers:
+                    kwargs["default_headers"] = extra_headers
 
                 llm = ChatOpenAI(**kwargs)
                 for chunk in llm.stream(full_messages):
@@ -500,7 +547,7 @@ def execute_single_provider_stream(
                         }
                 success = True
             except Exception as stream_err:
-                if provider != "huggingface":
+                if provider not in ["huggingface", "openrouter"]:
                     raise stream_err
                 logger.warning(f"ChatOpenAI stream failed for {model_id}: {stream_err}. Attempting direct HTTP fallback...")
 
@@ -512,6 +559,8 @@ def execute_single_provider_stream(
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json"
             }
+            if extra_headers:
+                headers.update(extra_headers)
             formatted_msgs = []
             for m in full_messages:
                 role = "user"

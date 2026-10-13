@@ -15,12 +15,12 @@ SECRET_PATTERNS = [
     
     # Environment variables & DB connection strings
     r'(?i)(mongodb(\+srv)?|postgres|postgresql|mysql|redis):\/\/[^\s]+',
-    r'(?i)[A-Z0-9_]+=(?:[A-Za-z0-9_\-\.\/]{8,})',
+    r'(?<![?&/#])[A-Z_]{3,}=(?:[A-Za-z0-9_\-\.]{8,})',
     
     # Private IP addresses & internal file paths
     r'\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3})\b',
     r'(?:[a-zA-Z]:\\(?:[^\s\\]+\\)+[^\s\\]+)',
-    r'(?:\/(?:[^\s\/]+\/)+[^\s\/]+)'
+    r'(?:\/(?:home|root|etc|var|tmp|usr|opt|app|Users)\/(?:[^\s\/]+\/)*[^\s\/]+)'
 ]
 
 INTERNAL_PROVIDER_MODEL_PATTERNS = [
