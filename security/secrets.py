@@ -5,13 +5,14 @@ from typing import List
 SECRET_PATTERNS = [
     # API Keys / Tokens
     r'(?i)(api[_-]?key|secret[_-]?key|auth[_-]?token|access[_-]?token|bearer[_-]?token)\s*[:=]\s*["\']?[A-Za-z0-9_\-\.]{8,}["\']?',
-    r'sk-[A-Za-z0-9]{20,}',
-    r'gsk_[A-Za-z0-9]{20,}',
+    r'sk-[A-Za-z0-9_\-]{16,}',
+    r'gsk_[A-Za-z0-9_\-]{16,}',
     r'AIzaSy[A-Za-z0-9_\-]{33}',
-    r'hf_[A-Za-z0-9]{30,}',
-    r'tvly-[A-Za-z0-9_\-]{20,}',
-    r'AQ\.Ab8[A-Za-z0-9_\-]{30,}',
-    r'eyJ[A-Za-z0-9_\-\.]{30,}={0,2}',
+    r'hf_[A-Za-z0-9]{20,}',
+    r'tvly-[A-Za-z0-9_\-]{16,}',
+    r'AQ\.Ab8[A-Za-z0-9_\-]{20,}',
+    r'eyJ[A-Za-z0-9_\-\.]{20,}={0,2}',
+    r'\b[0-9a-fA-F]{32}\b',
     
     # Environment variables & DB connection strings
     r'(?i)(mongodb(\+srv)?|postgres|postgresql|mysql|redis):\/\/[^\s]+',
@@ -23,12 +24,19 @@ SECRET_PATTERNS = [
     r'(?:\/(?:home|root|etc|var|tmp|usr|opt|app|Users)\/(?:[^\s\/]+\/)*[^\s\/]+)'
 ]
 
+KEY_NAME_PATTERNS = [
+    r'(?i)\b(ADZUNA_APP_ID|ADZUNA_APP_KEY|ADZUNA_API_KEY|WEATHERAPI_KEY|WEATHER_API_KEY|OPENWEATHER_API_KEY|OPENWEATHERMAP_API_KEY|GNEWS_API_KEY|GNEWS_KEY|HEIGIT_API_KEY|OPENROUTESERVICE_API_KEY|ORS_API_KEY|HF_TOKEN|HUGGINGFACE_API_KEY|HUGGINGFACE_TOKEN|OPENROUTER_API_KEY|OPENROUTER_KEY|GOOGLE_AI_STUDIO_API_KEY|GOOGLE_API_KEY|GEMINI_API_KEY|TAVILY_API_KEY|TAVILY_KEY|OPENAI_API_KEY|GROQ_API_KEY|ANTHROPIC_API_KEY)\b',
+    r'(?i)\b[A-Z0-9_]{2,}_(?:API_KEY|APP_ID|APP_KEY|SECRET|TOKEN|AUTH_TOKEN|KEY)\b',
+    r'(?i)\b(?:API_KEY|APP_ID|APP_KEY|AUTH_TOKEN|SECRET_KEY|BEARER_TOKEN|ACCESS_TOKEN)\b'
+]
+
 INTERNAL_PROVIDER_MODEL_PATTERNS = [
     r'(?i)\b(groq|openai|gemini|claude|llama|qwen|sarvam|smallest\s*ai|ollama|nvidia)\b',
     r'(?i)\b(llama-3\.[13]-(?:8b|70b)|gpt-4o|gemini-2\.5-(?:flash|pro)|sarvam-30b|sarvam-105b|qwen3:8b)\b'
 ]
 
 compiled_secret_regexes = [re.compile(p) for p in SECRET_PATTERNS]
+compiled_key_name_regexes = [re.compile(p) for p in KEY_NAME_PATTERNS]
 compiled_provider_regexes = [re.compile(p) for p in INTERNAL_PROVIDER_MODEL_PATTERNS]
 
 
@@ -39,13 +47,18 @@ def contains_secrets(text: str) -> bool:
     for regex in compiled_secret_regexes:
         if regex.search(text):
             return True
+    for regex in compiled_key_name_regexes:
+        if regex.search(text):
+            return True
     return False
 
 
 def sanitize_output_text(text: str) -> str:
     """
     Sanitizes assistant response text:
-    - Redacts any leaked secrets or credentials
+    - Redacts any leaked secrets, credentials, tokens, or hashes
+    - Scrub even a single word of any API key or environment variable name
+    - Intercepts and replaces any attempts to prompt users for keys or mention .env
     - Removes accidental disclosure of backend provider/model names
     """
     if not text:
@@ -53,9 +66,20 @@ def sanitize_output_text(text: str) -> str:
 
     sanitized = text
 
+    # Redact prompts asking users to configure keys, enter API keys, or inspect .env
+    config_prompt_patterns = [
+        r'(?i)[^\n]*?(?:is\s+not\s+configured|add\s+your\s+[\w\s`\*]*?(?:key|token|id)|\.env)[^\n]*'
+    ]
+    for cp in config_prompt_patterns:
+        sanitized = re.sub(cp, "Sorry, I couldn't retrieve that information right now. Please try again later.", sanitized)
+
     # Redact secrets
     for regex in compiled_secret_regexes:
         sanitized = regex.sub("[CONFIDENTIAL_REDACTED]", sanitized)
+
+    # Redact any key names or environment variable names (never expose even a single word)
+    for regex in compiled_key_name_regexes:
+        sanitized = regex.sub("[PROTECTED]", sanitized)
 
     # Redact explicit backend provider / model disclosures if present
     for regex in compiled_provider_regexes:

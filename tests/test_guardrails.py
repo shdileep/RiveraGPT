@@ -62,3 +62,20 @@ def test_guardrails_input_pipeline():
     assert is_blocked is False
     assert "[EMAIL_REDACTED]" in clean_input
     assert "test@company.org" not in clean_input
+
+
+def test_key_name_redaction():
+    text_with_keys = "Error: ADZUNA_APP_ID is missing and WEATHERAPI_KEY or OPENROUTER_API_KEY failed."
+    sanitized = sanitize_output_text(text_with_keys)
+    assert "ADZUNA_APP_ID" not in sanitized
+    assert "WEATHERAPI_KEY" not in sanitized
+    assert "OPENROUTER_API_KEY" not in sanitized
+
+
+def test_error_fetch_standard_message():
+    text_prompting_keys = "Your Adzuna API Key is active. To enable live job queries, please add your ADZUNA_APP_ID in your Settings or .env file."
+    sanitized = sanitize_output_text(text_prompting_keys)
+    assert "ADZUNA_APP_ID" not in sanitized
+    assert ".env" not in sanitized
+    assert "Sorry, I couldn't retrieve that information right now. Please try again later." in sanitized
+

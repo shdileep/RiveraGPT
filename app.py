@@ -156,8 +156,6 @@ async def get_integrations_status():
                 "name": "Google AI Studio (Gemini 2.5)",
                 "category": "ai_model",
                 "status": "active" if google_key and not google_key.startswith("your_") else "missing",
-                "masked_key": _mask_secret(google_key),
-                "env_var": "GOOGLE_AI_STUDIO_API_KEY",
                 "docs_url": "https://aistudio.google.com/api-keys",
                 "description": "Primary multimodal intelligence, deep reasoning, coding & analysis engine."
             },
@@ -166,8 +164,6 @@ async def get_integrations_status():
                 "name": "OpenRouter (Claude, GPT-4o, DeepSeek)",
                 "category": "ai_model",
                 "status": "active" if openrouter_key and not openrouter_key.startswith("your_") else "missing",
-                "masked_key": _mask_secret(openrouter_key),
-                "env_var": "OPENROUTER_API_KEY",
                 "docs_url": "https://openrouter.ai/keys",
                 "description": "Unified access to Claude 3.5 Sonnet, GPT-4o, DeepSeek R1 & 200+ models."
             },
@@ -176,8 +172,6 @@ async def get_integrations_status():
                 "name": "Hugging Face Hub & Inference",
                 "category": "ai_model",
                 "status": "active" if hf_key and not hf_key.startswith("your_") else "missing",
-                "masked_key": _mask_secret(hf_key),
-                "env_var": "HF_TOKEN",
                 "docs_url": "https://huggingface.co/settings/tokens",
                 "description": "Open-weights LLMs (Qwen 2.5, DeepSeek R1 Distill, Llama 3.3, Gemma)."
             },
@@ -186,8 +180,6 @@ async def get_integrations_status():
                 "name": "FLUX.1 Photorealistic AI Image Generator",
                 "category": "multimodal",
                 "status": "active",
-                "masked_key": "zero_key_active",
-                "env_var": "IMAGE_GENERATION_PROVIDER",
                 "docs_url": "https://pollinations.ai",
                 "description": "High-resolution photo & art generation via state-of-the-art FLUX.1 diffusion."
             },
@@ -196,8 +188,6 @@ async def get_integrations_status():
                 "name": "WeatherAPI.com",
                 "category": "tool",
                 "status": "active" if weatherapi_key and not weatherapi_key.startswith("your_") else "missing",
-                "masked_key": _mask_secret(weatherapi_key),
-                "env_var": "WEATHERAPI_KEY",
                 "docs_url": "https://www.weatherapi.com/my/",
                 "description": "Live conditions, hourly forecasts, UV index, and precipitation chance."
             },
@@ -206,8 +196,6 @@ async def get_integrations_status():
                 "name": "OpenWeatherMap",
                 "category": "tool",
                 "status": "active" if owm_key and not owm_key.startswith("your_") else "missing",
-                "masked_key": _mask_secret(owm_key),
-                "env_var": "OPENWEATHER_API_KEY",
                 "docs_url": "https://home.openweathermap.org/api_keys",
                 "description": "Secondary authenticated weather and temperature provider."
             },
@@ -216,8 +204,6 @@ async def get_integrations_status():
                 "name": "Open-Meteo Global Weather",
                 "category": "tool",
                 "status": "active",
-                "masked_key": "zero_key_active",
-                "env_var": "OPEN_METEO_DEFAULT",
                 "docs_url": "https://open-meteo.com",
                 "description": "Zero-key fallback ensuring worldwide weather retrieval never fails."
             },
@@ -226,8 +212,6 @@ async def get_integrations_status():
                 "name": "GNews Live News & Research",
                 "category": "tool",
                 "status": "active" if gnews_key and not gnews_key.startswith("your_") else "missing",
-                "masked_key": _mask_secret(gnews_key),
-                "env_var": "GNEWS_API_KEY",
                 "docs_url": "https://gnews.io/dashboard",
                 "description": "Real-time news search, tech headlines, and citation links."
             },
@@ -236,10 +220,6 @@ async def get_integrations_status():
                 "name": "Adzuna Job Search",
                 "category": "tool",
                 "status": adzuna_status,
-                "masked_key": _mask_secret(adzuna_key),
-                "env_var": "ADZUNA_APP_KEY",
-                "secondary_env_var": "ADZUNA_APP_ID",
-                "secondary_masked_key": _mask_secret(adzuna_id),
                 "docs_url": "https://developer.adzuna.com",
                 "description": "Open job postings, salary ranges, and official application links."
             },
@@ -248,8 +228,6 @@ async def get_integrations_status():
                 "name": "OpenRouteService / HeiGIT",
                 "category": "tool",
                 "status": "active" if ors_key and not ors_key.startswith("your_") else "missing",
-                "masked_key": _mask_secret(ors_key),
-                "env_var": "HEIGIT_API_KEY",
                 "docs_url": "https://account.heigit.org/manage/key",
                 "description": "Turn-by-turn navigation, route calculation, travel duration & distances."
             }
@@ -274,12 +252,12 @@ async def test_integration(request: Request):
         if provider_id == "google":
             key = os.getenv("GOOGLE_AI_STUDIO_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if not key or key.startswith("your_"):
-                return {"success": False, "message": "Google AI Studio API key is not configured."}
+                return {"success": False, "message": "Service is currently unavailable. Please try again later."}
             from langchain_google_genai import ChatGoogleGenerativeAI
             llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=key, request_timeout=8.0)
             res = llm.invoke("Hi")
             latency = round((time.time() - t0) * 1000, 1)
-            return {"success": True, "latency_ms": latency, "message": f"Connected to Google Gemini (response in {latency}ms)"}
+            return {"success": True, "latency_ms": latency, "message": f"Connected to AI intelligence engine ({latency}ms)"}
 
         elif provider_id in ["weather", "weatherapi", "openweather", "openmeteo"]:
             from tools import get_weather
@@ -291,41 +269,41 @@ async def test_integration(request: Request):
             from tools import get_latest_news
             res = get_latest_news.invoke({"query": "AI"})
             latency = round((time.time() - t0) * 1000, 1)
-            return {"success": "Failed" not in res, "latency_ms": latency, "message": f"News verified ({latency}ms)"}
+            return {"success": "Sorry" not in res and "unavailable" not in res, "latency_ms": latency, "message": f"News verified ({latency}ms)"}
 
         elif provider_id in ["heigit", "ors"]:
             from tools import get_directions_and_route
             res = get_directions_and_route.invoke({"start_location": "Paris", "end_location": "Lyon"})
             latency = round((time.time() - t0) * 1000, 1)
-            return {"success": "Failed" not in res, "latency_ms": latency, "message": f"Routing verified ({latency}ms)"}
+            return {"success": "Sorry" not in res and "unavailable" not in res, "latency_ms": latency, "message": f"Routing verified ({latency}ms)"}
 
         elif provider_id in ["flux_image", "image"]:
             from image_service import generate_image
             res = generate_image("minimal blue river geometric logo")
             latency = round((time.time() - t0) * 1000, 1)
-            return {"success": res.get("success", False), "latency_ms": latency, "message": f"Generated image via {res.get('provider')} ({latency}ms)"}
+            return {"success": res.get("success", False), "latency_ms": latency, "message": f"Image generation verified ({latency}ms)" if res.get("success") else "Image generator currently unavailable."}
 
         elif provider_id == "adzuna":
             from tools import search_jobs
             res = search_jobs.invoke({"query": "Software Engineer", "location": "Remote"})
             latency = round((time.time() - t0) * 1000, 1)
-            return {"success": True, "latency_ms": latency, "message": f"Adzuna integration checked ({latency}ms)"}
+            return {"success": True, "latency_ms": latency, "message": f"Job search verified ({latency}ms)"}
 
         elif provider_id == "openrouter":
             key = os.getenv("OPENROUTER_API_KEY")
             if not key or key.startswith("your_"):
-                return {"success": False, "message": "OPENROUTER_API_KEY is not configured."}
+                return {"success": False, "message": "Service is currently unavailable. Please try again later."}
             import httpx
             with httpx.Client(timeout=5.0) as client:
                 r = client.get("https://openrouter.ai/api/v1/auth/key", headers={"Authorization": f"Bearer {key}"})
                 latency = round((time.time() - t0) * 1000, 1)
-                return {"success": r.status_code == 200, "latency_ms": latency, "message": f"OpenRouter status: HTTP {r.status_code}"}
+                return {"success": r.status_code == 200, "latency_ms": latency, "message": f"Service active ({latency}ms)" if r.status_code == 200 else "Service unavailable."}
 
-        return {"success": True, "latency_ms": 10.0, "message": f"Provider '{provider_id}' is ready."}
+        return {"success": True, "latency_ms": 10.0, "message": f"Service is active."}
 
-    except Exception as e:
+    except Exception:
         latency = round((time.time() - t0) * 1000, 1)
-        return {"success": False, "latency_ms": latency, "message": f"Test failed: {str(e)}"}
+        return {"success": False, "latency_ms": latency, "message": "Connection check failed. Please try again later."}
 
 
 @app.post("/integrations/save")

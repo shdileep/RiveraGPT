@@ -78,7 +78,7 @@ def get_weather(location: str) -> str:
                     f"- Humidity: {humidity}%\n"
                     f"- Wind: {wind_kph} km/h {wind_dir}\n"
                     f"- UV Index: {uv}"
-                    f"{forecast_summary}\n\n*Provider: WeatherAPI*"
+                    f"{forecast_summary}"
                 )
         except Exception:
             # Fall through to OpenWeatherMap or Open-Meteo
@@ -111,7 +111,7 @@ def get_weather(location: str) -> str:
                     f"- Temperature: {temp_c}°C ({temp_f}°F)\n"
                     f"- Feels Like: {feels_c}°C ({feels_f}°F)\n"
                     f"- Humidity: {humidity}%\n"
-                    f"- Wind Speed: {wind_spd} m/s\n\n*Provider: OpenWeatherMap*"
+                    f"- Wind Speed: {wind_spd} m/s"
                 )
         except Exception:
             pass
@@ -177,12 +177,12 @@ def get_weather(location: str) -> str:
                         f"- Feels Like: {feels_c}°C ({feels_f}°F)\n"
                         f"- Humidity: {humidity}%\n"
                         f"- Wind Speed: {wind_kph} km/h"
-                        f"{forecast_summary}\n\n*Provider: Open-Meteo (Zero-Key)*"
+                        f"{forecast_summary}"
                     )
-    except Exception as e:
-        return f"Could not retrieve weather for '{cleaned_loc}': {str(e)}"
+    except Exception:
+        return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
-    return f"Weather services are currently unavailable for '{cleaned_loc}'. Please verify the spelling or try another city."
+    return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
 
 # ==============================================================================
@@ -197,7 +197,7 @@ def get_latest_news(query: str = "", category: str = "general") -> str:
     """
     gnews_key = os.getenv("GNEWS_API_KEY")
     if not gnews_key or gnews_key.startswith("your_"):
-        return "Live news is unavailable because GNEWS_API_KEY is not configured."
+        return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
     try:
         clean_q = query.strip()
@@ -216,7 +216,7 @@ def get_latest_news(query: str = "", category: str = "general") -> str:
             data = json.loads(resp.read().decode("utf-8"))
             articles = data.get("articles", [])
             if not articles:
-                return f"{heading}\nNo recent articles found."
+                return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
             output = [heading]
             for idx, a in enumerate(articles[:5], 1):
@@ -230,8 +230,8 @@ def get_latest_news(query: str = "", category: str = "general") -> str:
 
             return "\n\n".join(output)
 
-    except Exception as e:
-        return f"Failed to retrieve news: {str(e)}"
+    except Exception:
+        return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
 
 # ==============================================================================
@@ -251,7 +251,7 @@ def get_directions_and_route(start_location: str, end_location: str, mode: str =
         or os.getenv("HEIGIT_API_KEY")
     )
     if not ors_key or ors_key.startswith("your_"):
-        return "Directions service is unavailable because OPENROUTESERVICE_API_KEY is not configured."
+        return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
     # Normalize profile mode
     m = mode.lower().strip()
@@ -281,11 +281,11 @@ def get_directions_and_route(start_location: str, end_location: str, mode: str =
     try:
         start_lon, start_lat, start_name = geocode(start_location)
         if start_lon is None:
-            return f"Could not find coordinates for origin: '{start_location}'"
+            return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
         end_lon, end_lat, end_name = geocode(end_location)
         if end_lon is None:
-            return f"Could not find coordinates for destination: '{end_location}'"
+            return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
         # Query Directions API
         dir_url = (
@@ -325,8 +325,8 @@ def get_directions_and_route(start_location: str, end_location: str, mode: str =
                 f"**Key Navigation Steps:**\n{steps_formatted}"
             )
 
-    except Exception as e:
-        return f"Failed to compute route from '{start_location}' to '{end_location}': {str(e)}"
+    except Exception:
+        return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
 
 # ==============================================================================
@@ -354,19 +354,8 @@ def search_jobs(query: str, location: str = "", country: str = "us", experience_
     app_key = os.getenv("ADZUNA_APP_KEY") or os.getenv("ADZUNA_API_KEY")
     app_id = os.getenv("ADZUNA_APP_ID")
 
-    if not app_key or app_key.startswith("your_"):
-        return "Job search is unavailable because ADZUNA_APP_KEY is not configured in your settings."
-
-    if not app_id or app_id.startswith("your_"):
-        loc_str = clean_loc if clean_loc else "Remote / Any"
-        exp_str = f" ({experience_level})" if experience_level else ""
-        return (
-            f"### 💼 Job Search Setup Required\n"
-            f"Your Adzuna API Key is active. To enable live job queries, please add your **`ADZUNA_APP_ID`** from [developer.adzuna.com](https://developer.adzuna.com) in your Settings ⚙️ menu or `.env` file.\n\n"
-            f"- **Target Role**: {clean_q}{exp_str}\n"
-            f"- **Location**: {loc_str}\n\n"
-            f"*RiveraGPT adheres to strict factual verification standards and never fabricates simulated or fake job postings.*"
-        )
+    if not app_key or app_key.startswith("your_") or not app_id or app_id.startswith("your_"):
+        return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
     try:
         encoded_q = urllib.parse.quote(clean_q)
@@ -380,7 +369,7 @@ def search_jobs(query: str, location: str = "", country: str = "us", experience_
             data = json.loads(resp.read().decode("utf-8"))
             results = data.get("results", [])
             if not results:
-                return f"No verified job listings currently found for '{clean_q}' in '{clean_loc or country_code}'."
+                return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
             # Deduplicate by job URL or title+company
             seen_keys = set()
@@ -426,8 +415,8 @@ def search_jobs(query: str, location: str = "", country: str = "us", experience_
 
             return "\n\n".join(output)
 
-    except Exception as e:
-        return f"Failed to search jobs via Adzuna: {str(e)}"
+    except Exception:
+        return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
 
 # ==============================================================================
@@ -445,9 +434,9 @@ def generate_ai_image(prompt: str) -> str:
         res = generate_image(prompt)
         if res.get("success"):
             return res.get("markdown", f"![{prompt}]({res.get('url')})")
-        return f"Image generation failed: {res.get('error', 'Unknown error')}"
-    except Exception as e:
-        return f"Image generation error: {str(e)}"
+        return "Sorry, I couldn't generate that image right now. Please try again later."
+    except Exception:
+        return "Sorry, I couldn't generate that image right now. Please try again later."
 
 
 # ==============================================================================
@@ -472,11 +461,14 @@ def web_search(query: str) -> str:
             pass
 
     # Fallback to GNews search if query is news/current info
-    news_res = get_latest_news.invoke({"query": query})
-    if "Failed" not in news_res and "unavailable" not in news_res:
-        return news_res
+    try:
+        news_res = get_latest_news.invoke({"query": query})
+        if "Sorry" not in news_res and "unavailable" not in news_res:
+            return news_res
+    except Exception:
+        pass
 
-    return "Web search is currently unavailable. Configure TAVILY_API_KEY or GNEWS_API_KEY."
+    return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
 
 # ==============================================================================
@@ -511,8 +503,8 @@ def calculator(expression: str) -> str:
         expr = expression.replace("^", "**").strip()
         result = eval(expr, {"__builtins__": {}}, allowed)
         return str(result)
-    except Exception as e:
-        return f"Calculation error: {str(e)}"
+    except Exception:
+        return "Sorry, I couldn't calculate that right now. Please try again later."
 
 
 # ==============================================================================
@@ -524,10 +516,13 @@ def search_uploaded_documents(query: str) -> str:
     Search uploaded documents for relevant information.
     Use this when the user asks about uploaded PDFs, DOCX, TXT, notes, files, or documents.
     """
-    return retrieve_from_rag(
-        query=query,
-        thread_id=CURRENT_THREAD_ID
-    )
+    try:
+        return retrieve_from_rag(
+            query=query,
+            thread_id=CURRENT_THREAD_ID
+        )
+    except Exception:
+        return "Sorry, I couldn't retrieve that information right now. Please try again later."
 
 
 @tool
