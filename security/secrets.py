@@ -8,6 +8,10 @@ SECRET_PATTERNS = [
     r'sk-[A-Za-z0-9]{20,}',
     r'gsk_[A-Za-z0-9]{20,}',
     r'AIzaSy[A-Za-z0-9_\-]{33}',
+    r'hf_[A-Za-z0-9]{30,}',
+    r'tvly-[A-Za-z0-9_\-]{20,}',
+    r'AQ\.Ab8[A-Za-z0-9_\-]{30,}',
+    r'eyJ[A-Za-z0-9_\-\.]{30,}={0,2}',
     
     # Environment variables & DB connection strings
     r'(?i)(mongodb(\+srv)?|postgres|postgresql|mysql|redis):\/\/[^\s]+',

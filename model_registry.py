@@ -548,9 +548,9 @@ class RiveraModelRegistry:
             logger.debug(f"Groq auto-discovery skipped: {e}")
 
     def _discover_ollama(self) -> bool:
-        ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        ollama_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").replace("localhost", "127.0.0.1")
         try:
-            with httpx.Client(timeout=0.5) as client:
+            with httpx.Client(timeout=httpx.Timeout(0.2, connect=0.1)) as client:
                 res = client.get(f"{ollama_url}/api/tags")
                 if res.status_code == 200:
                     data = res.json()
@@ -584,13 +584,13 @@ class RiveraModelRegistry:
         return False
 
     def _discover_vllm(self) -> bool:
-        vllm_url = os.getenv("VLLM_BASE_URL", "http://localhost:8000/v1")
+        vllm_url = os.getenv("VLLM_BASE_URL", "http://127.0.0.1:8000/v1").replace("localhost", "127.0.0.1")
         api_key = os.getenv("VLLM_API_KEY", "EMPTY")
         headers = {}
         if api_key and api_key != "EMPTY":
             headers["Authorization"] = f"Bearer {api_key}"
         try:
-            with httpx.Client(timeout=0.5) as client:
+            with httpx.Client(timeout=httpx.Timeout(0.2, connect=0.1)) as client:
                 res = client.get(f"{vllm_url.rstrip('/')}/models", headers=headers)
                 if res.status_code == 200:
                     data = res.json()
