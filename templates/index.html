@@ -768,173 +768,6 @@
             transform: translateY(-1px);
         }
 
-        .integrations-modal-card {
-            background: var(--surface-dark);
-            border: 1px solid var(--border-glow);
-            border-radius: 18px;
-            padding: 24px;
-            width: 94%;
-            max-width: 720px;
-            max-height: 88vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
-            animation: modalFadeIn 0.18s ease-out;
-            color: var(--text-main);
-        }
-
-        .modal-tabs {
-            display: flex;
-            gap: 8px;
-            border-bottom: 1px solid var(--border-dark);
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-        }
-
-        .modal-tab-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text-secondary);
-            padding: 7px 16px;
-            border-radius: 8px;
-            font-size: 13.5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .modal-tab-btn:hover {
-            color: var(--text-main);
-            background: var(--surface-hover);
-        }
-
-        .modal-tab-btn.active {
-            background: rgba(140, 104, 252, 0.15);
-            border-color: rgba(140, 104, 252, 0.4);
-            color: var(--accent-violet);
-        }
-
-        .integrations-list {
-            overflow-y: auto;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding-right: 4px;
-        }
-
-        .integration-row {
-            background: var(--bg-dark);
-            border: 1px solid var(--border-dark);
-            border-radius: 12px;
-            padding: 14px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            transition: border-color 0.15s ease;
-        }
-
-        .integration-row:hover {
-            border-color: var(--border-glow);
-        }
-
-        .integration-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .integration-title-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .integration-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .status-badge {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .status-badge.active {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .status-badge.partial {
-            background: rgba(245, 158, 11, 0.15);
-            color: #f59e0b;
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
-
-        .status-badge.missing {
-            background: rgba(142, 153, 176, 0.15);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-dark);
-        }
-
-        .integration-desc {
-            font-size: 12.5px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-
-        .integration-input-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 4px;
-        }
-
-        .key-input {
-            flex: 1;
-            background: var(--surface-dark);
-            border: 1px solid var(--border-dark);
-            border-radius: 8px;
-            color: var(--text-main);
-            padding: 7px 10px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            outline: none;
-        }
-
-        .key-input:focus {
-            border-color: var(--accent-violet);
-        }
-
-        .action-sm-btn {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid var(--border-dark);
-            background: var(--surface-hover);
-            color: var(--text-main);
-            transition: all 0.15s ease;
-            white-space: nowrap;
-        }
-
-        .action-sm-btn:hover {
-            border-color: var(--accent-violet);
-        }
-
-        .action-sm-btn.primary {
-            background: var(--gradient-primary);
-            border: none;
-            color: #fff;
-        }
-
         @media(max-width: 768px) {
             .sidebar { display: none; }
             .input-dock { left: 0; }
@@ -952,67 +785,6 @@
         <div class="modal-title" id="modalTitle">Title</div>
         <div id="modalBody"></div>
         <div class="modal-actions" id="modalActions"></div>
-    </div>
-</div>
-
-<!-- RiveraGPT Integrations & Settings Modal -->
-<div class="modal-overlay" id="integrationsModalOverlay" onclick="if(event.target===this) closeIntegrationsModal()">
-    <div class="integrations-modal-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:22px;">⚙️</span>
-                <div>
-                    <div style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700;">Integrations & Services</div>
-                    <div style="font-size:12px; color:var(--text-secondary);">Active AI models, tools, and system services</div>
-                </div>
-            </div>
-            <button class="action-sm-btn" onclick="closeIntegrationsModal()" style="padding:4px 10px; font-size:16px;">✕</button>
-        </div>
-
-        <div class="modal-tabs">
-            <button class="modal-tab-btn active" id="tabBtnProviders" onclick="switchIntegrationsTab('providers')">⚡ Active Providers & Tools</button>
-            <button class="modal-tab-btn" id="tabBtnVercel" onclick="switchIntegrationsTab('vercel')">▲ Deployment Architecture</button>
-        </div>
-
-        <!-- Tab 1: Providers & Tools -->
-        <div id="integrationsTabProviders" class="integrations-list">
-            <div id="integrationsLoading" style="text-align:center; padding:30px; color:var(--text-secondary);">
-                Loading service statuses...
-            </div>
-            <div id="integrationsContainer" style="display:none; display:flex; flex-direction:column; gap:10px;"></div>
-        </div>
-
-        <!-- Tab 2: Vercel Deployment -->
-        <div id="integrationsTabVercel" style="display:none; overflow-y:auto; flex:1; padding-right:4px;">
-            <div style="background:var(--bg-dark); border:1px solid var(--border-dark); border-radius:12px; padding:16px; margin-bottom:12px;">
-                <div style="font-weight:600; font-size:14px; margin-bottom:6px; color:var(--accent-cyan); display:flex; align-items:center; gap:8px;">
-                    ▲ Production Serverless Architecture
-                </div>
-                <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5;">
-                    RiveraGPT runs with production serverless architecture. All integrations, reasoning engines, weather, news, job search, and image generation are managed securely through verified system services.
-                    <ul style="margin:8px 0 8px 18px; padding:0;">
-                        <li>Automated multi-provider model routing & fallback.</li>
-                        <li>High-speed SSE response streaming with markdown & KaTeX support.</li>
-                        <li>Zero-key fallback ensuring 100% uptime for global weather.</li>
-                        <li>Enterprise guardrails preventing credential leaks.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div style="background:var(--code-bg); border:1px solid var(--border-dark); border-radius:10px; padding:14px; font-size:12px; color:var(--text-secondary); line-height:1.6;" id="vercelEnvPreview">
-                <div style="color:var(--accent-green); font-weight:600; margin-bottom:4px;">✓ Deployment Status: Ready & Configured</div>
-                <div>Runtime: Python Serverless ASGI Engine</div>
-                <div>Security: End-to-end secret redaction & PII scrubbing active</div>
-                <div>Connectivity: Real-time API verification available via Service Test</div>
-            </div>
-        </div>
-
-        <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-dark); display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:11.5px; color:var(--text-muted);">
-                🔒 Protected by RiveraGPT Security Guardrails.
-            </div>
-            <button class="action-sm-btn primary" onclick="closeIntegrationsModal()">Done</button>
-        </div>
     </div>
 </div>
 
@@ -1041,13 +813,6 @@
         </div>
 
         <div style="display:flex; align-items:center; gap:10px;">
-            <button class="settings-btn" id="openSettingsBtn" onclick="openIntegrationsModal()" title="Integrations & Services">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-                <span>Integrations</span>
-            </button>
             <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
                 🌙
             </button>
@@ -1075,7 +840,7 @@
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
                     Breaking News & Headlines
                 </div>
-                <div class="action-card-desc">Top stories and live news powered by GNews</div>
+                <div class="action-card-desc">Top stories, breaking news & live updates</div>
             </div>
 
             <div class="action-card" onclick="setInput('Calculate driving directions and route from Paris to Lyon')">
@@ -1107,7 +872,7 @@
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
                     AI Image Generation
                 </div>
-                <div class="action-card-desc">Photorealistic art, logos & concepts (FLUX.1)</div>
+                <div class="action-card-desc">Photorealistic art, logos & visual concepts</div>
             </div>
 
             <div class="action-card" onclick="setInput('నమస్కారం! AI టెక్నాలజీ గురించి వివరించండి')">
@@ -1746,127 +1511,6 @@
             }
             isGenerating = false;
             loadConversations();
-        }
-    }
-
-    // ==========================================
-    // INTEGRATIONS & SETTINGS MODAL LOGIC
-    // ==========================================
-    let cachedIntegrations = [];
-
-    function openIntegrationsModal() {
-        const overlay = document.getElementById("integrationsModalOverlay");
-        overlay.style.display = "flex";
-        loadIntegrations();
-    }
-
-    function closeIntegrationsModal() {
-        const overlay = document.getElementById("integrationsModalOverlay");
-        overlay.style.display = "none";
-    }
-
-    function switchIntegrationsTab(tab) {
-        const tabBtnP = document.getElementById("tabBtnProviders");
-        const tabBtnV = document.getElementById("tabBtnVercel");
-        const tabP = document.getElementById("integrationsTabProviders");
-        const tabV = document.getElementById("integrationsTabVercel");
-
-        if (tab === "vercel") {
-            tabBtnP.classList.remove("active");
-            tabBtnV.classList.add("active");
-            tabP.style.display = "none";
-            tabV.style.display = "block";
-        } else {
-            tabBtnV.classList.remove("active");
-            tabBtnP.classList.add("active");
-            tabV.style.display = "none";
-            tabP.style.display = "flex";
-        }
-    }
-
-    async function loadIntegrations() {
-        const loading = document.getElementById("integrationsLoading");
-        const container = document.getElementById("integrationsContainer");
-        loading.style.display = "block";
-        container.style.display = "none";
-
-        try {
-            const res = await fetch("/api/integrations/status");
-            const data = await res.json();
-            cachedIntegrations = data.integrations || [];
-            renderIntegrationsList(cachedIntegrations);
-        } catch (e) {
-            loading.innerHTML = `<span style="color:var(--accent-rose)">Failed to load integrations. Please try again later.</span>`;
-        }
-    }
-
-    function renderIntegrationsList(integrations) {
-        const loading = document.getElementById("integrationsLoading");
-        const container = document.getElementById("integrationsContainer");
-        container.innerHTML = "";
-
-        integrations.forEach(item => {
-            const row = document.createElement("div");
-            row.className = "integration-row";
-
-            let badgeHtml = "";
-            if (item.status === "active") {
-                badgeHtml = `<span class="status-badge active">● Active</span>`;
-            } else if (item.status === "partial") {
-                badgeHtml = `<span class="status-badge active">● Active</span>`;
-            } else {
-                badgeHtml = `<span class="status-badge missing">○ Ready</span>`;
-            }
-
-            const testBtnId = `test_btn_${item.id}`;
-            const statusMsgId = `status_msg_${item.id}`;
-
-            row.innerHTML = `
-                <div class="integration-header">
-                    <div class="integration-title-group">
-                        <span class="integration-name">${item.name}</span>
-                        ${badgeHtml}
-                    </div>
-                    <a href="${item.docs_url}" target="_blank" style="font-size:11.5px; color:var(--accent-cyan); text-decoration:none;">Docs ↗</a>
-                </div>
-                <div class="integration-desc">${item.description}</div>
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
-                    <button class="action-sm-btn" id="${testBtnId}" onclick="testSingleIntegration('${item.id}', '${testBtnId}', '${statusMsgId}')">⚡ Test Service</button>
-                    <div id="${statusMsgId}" style="font-size:11.5px; min-height:14px;"></div>
-                </div>
-            `;
-            container.appendChild(row);
-        });
-
-        loading.style.display = "none";
-        container.style.display = "flex";
-    }
-
-    async function testSingleIntegration(providerId, btnId, msgId) {
-        const btn = document.getElementById(btnId);
-        const msg = document.getElementById(msgId);
-        const origText = btn.innerText;
-        btn.innerText = "...";
-        btn.disabled = true;
-        msg.innerHTML = `<span style="color:var(--text-secondary)">Checking...</span>`;
-
-        try {
-            const res = await fetch("/api/integrations/test", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ provider: providerId })
-            });
-            const data = await res.json();
-            if (data.success) {
-                msg.innerHTML = `<span style="color:var(--accent-green)">✓ ${data.message}</span>`;
-            } else {
-                msg.innerHTML = `<span style="color:var(--accent-rose)">✕ Connection check failed. Please try again later.</span>`;
-            }
-        } catch (e) {
-            msg.innerHTML = `<span style="color:var(--accent-rose)">✕ Connection check failed. Please try again later.</span>`;
-        } finally {
-            btn.innerText = origText;
-            btn.disabled = false;
         }
     }
 
